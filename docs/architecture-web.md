@@ -97,7 +97,5 @@ recevoir directement des valeurs utilisateur par simple interpolation HTML.
 
 ## Références
 
-- [BaseController du blog](https://github.com/Axel92290/Projet5_blog_php/blob/main/controllers/BaseController.php)
-- [Création d'un article](https://github.com/Axel92290/Projet5_blog_php/blob/main/controllers/CreatePostsController.php)
 - [Twig : API et configuration](https://twig.symfony.com/doc/3.x/api.html)
 - [Twig : héritage](https://twig.symfony.com/doc/3.x/tags/extends.html)
