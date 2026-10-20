@@ -26,7 +26,7 @@ La suppression des clients ne fait pas partie de la première version.
 
 | Partie | Technologie |
 |---|---|
-| Interface | HTML, CSS et JavaScript |
+| Interface V1 | HTML, Bootstrap 5.3, CSS personnalisé et JavaScript natif |
 | Application web | PHP MVC avec composants Symfony indépendants |
 | Dépendances et autoloading | Composer |
 | Base de données | Db2 for i |
@@ -47,6 +47,9 @@ Annuaire-client/
 │   ├── public/
 │   │   ├── index.php
 │   │   └── assets/
+│   │       ├── css/app.css
+│   │       ├── js/
+│   │       └── vendor/bootstrap/  # Distribution officielle et licence
 │   ├── src/
 │   │   ├── Controllers/
 │   │   │   └── ClientController.php
@@ -119,6 +122,47 @@ composer require symfony/http-foundation symfony/security-csrf symfony/validator
 L'échappement à la sortie reste obligatoire. Un assainisseur HTML tel que
 `symfony/html-sanitizer` ne sera envisagé que si une fonctionnalité autorise
 du HTML fourni par un utilisateur.
+
+### Interface : Bootstrap pour la V1
+
+Bootstrap 5.3 est retenu pour les tableaux, formulaires, alertes et mises
+en page responsive de cet annuaire. Ce choix réutilise les connaissances
+Bootstrap de l'auteur et permet de concentrer l'apprentissage sur PHP,
+Db2 et RPG. Tailwind reste pertinent pour un projet privilégiant un design
+sur mesure ; il ne sera pas ajouté en parallèle dans cette V1.
+
+Les fichiers compilés de Bootstrap seront conservés localement dans
+`web/public/assets/vendor/bootstrap/`, avec leur licence et une version
+corrective précise documentée. Charger le CSS Bootstrap avant
+`assets/css/app.css`. N'ajouter le bundle JavaScript Bootstrap que si un
+composant interactif l'exige, avec la même version que le CSS.
+
+Ce mode ne nécessite ni Node.js/npm ni compilation CSS. Les fichiers tiers
+seront versionnés pour permettre de lancer une copie du dépôt sans dépendre
+d'un CDN. La CSP devra tenir compte des ressources réellement utilisées,
+y compris les URL de données de certains styles Bootstrap si nécessaire.
+L'accessibilité, l'échappement HTML et les validations serveur restent
+à vérifier ; une bibliothèque d'interface ne les garantit pas.
+
+Les parcours essentiels utiliseront des liens et formulaires PHP classiques.
+Le JavaScript natif servira aux améliorations progressives, sans empêcher
+le fonctionnement de base lorsqu'il est désactivé.
+
+### TypeScript : évolution facultative après la V1
+
+TypeScript est intéressant pour apprendre à typer le DOM, les fonctions
+et les échanges de données. Pour les quelques interactions de la première
+version, il n'est pas un prérequis et ne sera pas installé immédiatement.
+
+L'[issue #16](https://github.com/Axel92290/Annuaire-client/issues/16)
+prévoit une évolution après validation de la V1 : sources sous
+`web/assets/ts/`, configuration stricte, contrôle des types et compilation
+en JavaScript pour le navigateur. Node.js/npm et le compilateur TypeScript
+deviendront alors des outils de développement ; Vite et React ne sont
+pas imposés. Les types ne remplacent ni les validations à l'exécution
+ni les protections du serveur.
+
+La V1 et l'issue de validation #13 ne dépendent pas de cette évolution.
 
 ### Namespaces et autoloading
 
@@ -194,12 +238,15 @@ Les diagrammes de conception seront conservés dans `docs/diagrammes/` :
 - [ ] Initialiser le MVC, les namespaces PSR-4 et les composants Symfony.
 - [ ] Configurer les environnements INI et le socle de sécurité web.
 - [ ] Configurer la connexion ODBC à Db2.
+- [ ] Préparer le socle d'interface Bootstrap responsive (#15).
 - [ ] Afficher la liste des clients.
 - [ ] Ajouter la recherche et la fiche client.
 - [ ] Développer et tester le programme CLTADD.
 - [ ] Connecter le formulaire d’ajout au programme RPG.
 - [ ] Développer CLTUPD et la modification d’un client.
 - [ ] Documenter l’installation et vérifier les scénarios d’erreur.
+
+Après la V1, évolution facultative : apprentissage et introduction de TypeScript (#16).
 
 ## Prérequis et installation
 
@@ -292,12 +339,19 @@ Une démonstration locale utilisera uniquement des clients fictifs.
 Les tâches de réalisation sont suivies dans les [issues du dépôt](https://github.com/Axel92290/Annuaire-client/issues).
 Chaque issue indique ses critères de validation, ses dépendances et sa branche.
 
-Les branches de travail existent déjà. Avant de démarrer une tâche,
+Les branches de la V1 existent déjà. La branche facultative TypeScript sera
+créée seulement au démarrage de cette évolution. Avant de démarrer une tâche,
 intégrer la version récente de `main` à sa branche, puis vérifier que ses
 issues préalables sont terminées. Les travaux seront proposés par Pull Request
 vers `main` avec `Closes #numero` lorsque les critères seront satisfaits.
 La création d'une issue ou d'une branche ne signifie pas que la fonctionnalité
 est réalisée.
+
+## Références techniques
+
+- [Bootstrap : démarrage](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+- [Tailwind : installation](https://tailwindcss.com/docs/installation/using-vite)
+- [TypeScript : principes et compilation](https://www.typescriptlang.org/docs/handbook/2/basic-types.html)
 
 ## Auteur
 
