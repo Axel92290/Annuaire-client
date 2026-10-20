@@ -11,6 +11,10 @@
 # Configuration propre à chaque environnement
 **/config/*.local.php
 
+# Configuration INI réelle (les exemples restent versionnés)
+/web/config/*.ini
+!/web/config/*.ini.example
+
 # Journaux, caches et fichiers temporaires
 /web/var/
 /web/cache/
