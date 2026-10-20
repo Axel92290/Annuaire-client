@@ -26,7 +26,7 @@ La suppression des clients ne fait pas partie de la première version.
 
 | Partie | Technologie |
 |---|---|
-| Interface V1 | HTML, Bootstrap 5.3, CSS personnalisé et JavaScript natif |
+| Interface V1 | Templates Twig, HTML, Bootstrap 5.3, CSS et JavaScript natif |
 | Application web | PHP MVC avec composants Symfony indépendants |
 | Dépendances et autoloading | Composer |
 | Base de données | Db2 for i |
@@ -52,6 +52,7 @@ Annuaire-client/
 │   │       └── vendor/bootstrap/  # Distribution officielle et licence
 │   ├── src/
 │   │   ├── Controllers/
+│   │   │   ├── BaseController.php
 │   │   │   └── ClientController.php
 │   │   ├── Models/
 │   │   │   └── Client.php
@@ -62,12 +63,18 @@ Annuaire-client/
 │   │   └── Infrastructure/
 │   │       ├── Db2Connection.php
 │   │       └── IbmiProgramGateway.php
-│   ├── views/
-│   │   ├── layout.php
+│   ├── templates/
+│   │   ├── base.html.twig
+│   │   ├── partials/_flash.html.twig
+│   │   ├── errors/
+│   │   │   ├── 404.html.twig
+│   │   │   └── 500.html.twig
 │   │   └── clients/
-│   │       ├── index.php
-│   │       ├── show.php
-│   │       └── form.php
+│   │       ├── index.html.twig
+│   │       ├── show.html.twig
+│   │       ├── new.html.twig
+│   │       ├── edit.html.twig
+│   │       └── _form.html.twig
 │   ├── config/
 │   │   ├── bootstrap.php
 │   │   ├── routes.php
@@ -89,7 +96,8 @@ Annuaire-client/
 
 ### Rôle des composants
 
-- **ClientController** reçoit les requêtes et prépare les réponses.
+- **BaseController**, abstrait, mutualise uniquement le rendu Twig et les redirections, en retournant des réponses HttpFoundation.
+- **ClientController** hérite de BaseController, reçoit les requêtes et retourne les réponses ; il utilise ClientService pour les opérations métier.
 - **Client** représente les données d’un client.
 - **ClientService** contrôle les données du formulaire et coordonne les opérations.
 - **ClientRepository** lit les clients dans Db2 avec SQL.
@@ -97,7 +105,8 @@ Annuaire-client/
 - **IbmiProgramGateway** centralise les appels aux programmes RPG.
 - **CLTADD** contrôle les données métier et ajoute un client.
 - **CLTUPD** contrôle les données métier et modifie un client.
-- **Les vues** affichent les pages et les formulaires.
+- **Les templates Twig** constituent la couche Vue et affichent les pages et formulaires. Ils restent hors de public/.
+- **Twig\\Environment** est construit une fois au démarrage puis injecté ; aucune classe View supplémentaire n'est nécessaire à ce stade.
 
 ### Dépendances PHP prévues
 
@@ -107,6 +116,7 @@ Annuaire-client/
 | `symfony/security-csrf` | Génération et vérification des jetons CSRF |
 | `symfony/validator` | Validation des champs côté PHP |
 | `symfony/routing` | Routes et méthodes HTTP autorisées |
+| `twig/twig` | Rendu HTML, héritage des templates et échappement automatique |
 
 Le projet conserve son MVC ; il n'utilise pas le framework Symfony complet.
 Les versions seront choisies selon la version de PHP réellement utilisée,
@@ -115,7 +125,7 @@ puis fixées dans `composer.lock`. Les dépendances ne sont pas encore installé
 Depuis `web/`, lors de l'initialisation de l'application :
 
 ```bash
-composer require symfony/http-foundation symfony/security-csrf symfony/validator symfony/routing
+composer require symfony/http-foundation symfony/security-csrf symfony/validator symfony/routing twig/twig
 ```
 
 `voku/anti-xss` n'est pas retenu pour les coordonnées en texte simple.
@@ -144,7 +154,8 @@ y compris les URL de données de certains styles Bootstrap si nécessaire.
 L'accessibilité, l'échappement HTML et les validations serveur restent
 à vérifier ; une bibliothèque d'interface ne les garantit pas.
 
-Les parcours essentiels utiliseront des liens et formulaires PHP classiques.
+Les parcours essentiels utiliseront des liens et formulaires HTML classiques,
+rendus par Twig et traités par PHP.
 Le JavaScript natif servira aux améliorations progressives, sans empêcher
 le fonctionnement de base lorsqu'il est désactivé.
 
@@ -163,6 +174,51 @@ pas imposés. Les types ne remplacent ni les validations à l'exécution
 ni les protections du serveur.
 
 La V1 et l'issue de validation #13 ne dépendent pas de cette évolution.
+
+### Contrôleurs et couche Vue
+
+La couche Vue est nécessaire au MVC ; Twig est un choix de moteur de
+templates, pas une obligation du modèle MVC. Il est retenu pour ce projet
+afin de réutiliser les acquis du blog PHP et de centraliser l'héritage des
+pages, les fragments de formulaires et l'échappement HTML.
+
+`BaseController` reste une petite classe abstraite avec des méthodes
+protégées `render(): Response` et `redirect(): RedirectResponse`.
+Les actions de `ClientController` retournent une `Response`.
+Le point d'entrée envoie la réponse une seule fois après le dispatch.
+
+Les services et Twig sont injectés depuis `config/services.php` ; le
+constructeur du contrôleur de base ne crée ni connexion Db2, ni configuration,
+ni session, ni objets métier. La requête est transmise aux actions ; la
+session et le gestionnaire CSRF sont initialisés dans le démarrage.
+
+Les vues sont conservées dans `web/templates/` :
+
+- `base.html.twig` : structure HTML commune et fichiers CSS/JS ;
+- `partials/_flash.html.twig` : messages de confirmation et d'erreur ;
+- `clients/index.html.twig` et `show.html.twig` : liste et fiche ;
+- `clients/new.html.twig` et `edit.html.twig` : pages de formulaire ;
+- `clients/_form.html.twig` : champs, erreurs et jeton CSRF partagés ;
+- `errors/404.html.twig` et `500.html.twig` : erreurs sans détails sensibles.
+
+Configuration prévue : `autoescape: html`, `strict_variables: true`,
+debug uniquement en développement, cache de production sous
+`web/var/cache/twig/` (hors public/ et ignoré par Git).
+
+Les données sont validées et normalisées avant stockage, sans encodage
+HTML préalable. Twig les échappe à l'affichage ; aucun `|raw` sur des
+valeurs utilisateur. Un contexte JavaScript, CSS ou URL nécessite une
+protection adaptée : l'auto-échappement HTML ne couvre pas tous les contextes.
+
+Une fonction Twig `csrf_token(action)` sera enregistrée explicitement pour
+retourner la valeur du jeton Symfony. Sans Symfony complet, ni cette fonction
+ni `path()` ne sont ajoutées automatiquement. Le champ caché reste du HTML
+de confiance dans le template, avec la valeur du jeton échappée normalement.
+
+La réponse de refus d'accès ou de redirection doit être retournée immédiatement
+par l'action ; envoyer une redirection puis continuer le traitement est exclu.
+
+Voir [la décision d'architecture et l'analyse ciblée du blog](docs/architecture-web.md).
 
 ### Namespaces et autoloading
 
@@ -235,7 +291,8 @@ Les diagrammes de conception seront conservés dans `docs/diagrammes/` :
 - [x] Préparer une première version des diagrammes.
 - [ ] Valider les champs et les règles métier.
 - [ ] Créer la table CLIENTS dans Db2.
-- [ ] Initialiser le MVC, les namespaces PSR-4 et les composants Symfony.
+- [ ] Initialiser le MVC, les namespaces PSR-4, les composants Symfony et Twig.
+- [ ] Définir BaseController et le rendu des templates avec des réponses HttpFoundation.
 - [ ] Configurer les environnements INI et le socle de sécurité web.
 - [ ] Configurer la connexion ODBC à Db2.
 - [ ] Préparer le socle d'interface Bootstrap responsive (#15).
@@ -319,7 +376,7 @@ encore implémentées.
 | Sujet | Protection attendue |
 |---|---|
 | CSRF | Jetons Symfony liés à la session et à l'action, vérifiés avant chaque écriture ; une modification utilise POST, jamais GET |
-| XSS | Échappement des valeurs selon le contexte de sortie ; pour du texte HTML ou un attribut cité : `htmlspecialchars(..., ENT_QUOTES \| ENT_SUBSTITUTE, 'UTF-8')` ; `textContent` pour les insertions de texte en JavaScript |
+| XSS | Auto-échappement HTML Twig ; aucun `raw` pour les données utilisateur ni pré-encodage HTML en base ; protection adaptée aux autres contextes et `textContent` en JavaScript |
 | Injection SQL | Requêtes préparées dans PHP et variables hôtes en RPG ; aucune concaténation d'entrées dans les commandes SQL |
 | Validation | Liste explicite des champs acceptés, types et longueurs contrôlés avec Validator ; contrôles métier définitifs dans RPG |
 | Sessions | Cookies HttpOnly, SameSite et Secure sous HTTPS ; mode strict et renouvellement de l'identifiant après authentification |
@@ -349,6 +406,7 @@ est réalisée.
 
 ## Références techniques
 
+- [Twig : configuration et rendu](https://twig.symfony.com/doc/3.x/api.html)
 - [Bootstrap : démarrage](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
 - [Tailwind : installation](https://tailwindcss.com/docs/installation/using-vite)
 - [TypeScript : principes et compilation](https://www.typescriptlang.org/docs/handbook/2/basic-types.html)
