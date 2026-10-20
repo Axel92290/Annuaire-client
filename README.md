@@ -122,20 +122,20 @@ du HTML fourni par un utilisateur.
 
 ### Namespaces et autoloading
 
-Dans `web/composer.json`, le namespace `App\\` sera associé à `src/` :
+Dans `web/composer.json`, le namespace `App\` sera associé à `src/` :
 
 ```json
 {
     "autoload": {
         "psr-4": {
-            "App\\\\": "src/"
+            "App\\": "src/"
         }
     }
 }
 ```
 
 Exemple : `web/src/Controllers/ClientController.php` correspond à
-`App\\Controllers\\ClientController`.
+`App\Controllers\ClientController`.
 
 Après configuration, exécuter `composer dump-autoload` depuis `web/`.
 Le point d'entrée chargera `web/vendor/autoload.php`.
