@@ -1,0 +1,50 @@
+# Dépendances PHP installées par Composer
+/vendor/
+/web/vendor/
+
+# Variables d'environnement et secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Configuration propre à chaque environnement
+**/config/*.local.php
+
+# Journaux, caches et fichiers temporaires
+/web/var/
+/web/cache/
+/web/logs/
+/web/tmp/
+*.log
+*.tmp
+*.bak
+*~
+
+# Résultats des tests et de l'analyse de code
+/coverage/
+/web/coverage/
+.phpunit.cache/
+.phpunit.result.cache
+.php-cs-fixer.cache
+
+# Réglages locaux des éditeurs
+.idea/
+.vscode/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Exports et fichiers générés IBM i
+*.savf
+*.SAVF
+*.splf
+*.SPLF
+/ibmi/build/
+/ibmi/exports/
+
+# Données locales et exports de clients
+/data/private/
+/exports/
