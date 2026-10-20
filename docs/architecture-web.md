@@ -41,9 +41,9 @@ autoloading et helpers de rendu.
 
 La Vue est la couche de présentation. Twig est son moteur de rendu.
 Une classe View personnalisée serait une abstraction supplémentaire sans besoin
-actuel : Twig\\Environment fournit déjà le rendu des templates.
+actuel : Twig\Environment fournit déjà le rendu des templates.
 
-BaseController est une classe abstraite sous App\\Controllers.
+BaseController est une classe abstraite sous App\Controllers.
 Son périmètre est volontairement limité :
 
 | Méthode protégée | Contrat |
