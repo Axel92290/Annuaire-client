@@ -61,6 +61,18 @@ La connexion Db2 et la passerelle RPG restent indépendantes du rendu.
 Aucun nouveau BaseRepository ou modèle actif ne sera ajouté par analogie au blog :
 le repository lit, le service coordonne et les programmes RPG écrivent.
 
+## Réalisation de l’interface avant l’intégration
+
+#1 fixe les champs et le contrat des données transmis aux templates. #3 initialise le socle PHP/Twig sans ouvrir de connexion Db2 au démarrage et sans exiger ODBC pour afficher les pages de démonstration.
+
+#15 intègre ensuite toute la maquette avec des données fictives chargées côté PHP depuis web/fixtures/clients.php. Les templates sont ceux de la V1 ; #5 à #7 y branchent les lectures Db2 et #10/#12 raccordent les formulaires aux programmes RPG. Les services d’intégration ne sont construits que lorsqu’ils sont nécessaires aux routes utilisant les données réelles.
+
+La démonstration est réservée au développement et ne simule pas une écriture réussie. Les POST métier ne sont activés qu’après vérification de la passerelle, de la validation serveur, des droits et du CSRF. Les états d’erreur visuels peuvent être présentés avec des scénarios fictifs explicites.
+
+Les composants Symfony et Twig sont installés dans #3 dans des versions compatibles avec le PHP retenu. Les exigences du pilote IBM et de PDO_ODBC sont ajoutées dans #4 ; elles ne bloquent pas #15.
+
+Voir [la feuille de route](roadmap.md) pour l’ordre et les critères de validation.
+
 ## Intégration Twig
 
 Ajouter twig/twig avec Composer, dans une version compatible avec PHP.
