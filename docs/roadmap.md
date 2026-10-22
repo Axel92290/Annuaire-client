@@ -41,22 +41,22 @@ Les relations natives GitHub font foi pour les blocages. Les références ci-des
 
 | Issue | Prérequis | Branche existante |
 |---|---|---|
-| #1 | Aucun | docs/roadmap |
-| #3 | Aucun | docs/roadmap |
-| #15 | #1, #3 | docs/roadmap |
-| #2 | #1 | docs/roadmap |
-| #4 | #2, #3 | docs/roadmap |
-| #5 | #4, #15 | docs/roadmap |
-| #6 | #5 | docs/roadmap |
-| #7 | #5 | docs/roadmap |
-| #14 | #3 | docs/roadmap |
-| #8 | #3, #4 | docs/roadmap |
-| #9 | #1, #2, #8 | docs/roadmap |
-| #10 | #5, #6, #8, #9, #14 | docs/roadmap |
-| #11 | #9 | docs/roadmap |
-| #12 | #6, #10, #11, #14 | docs/roadmap |
-| #13 | #7, #10, #12, #14, #15 | docs/roadmap |
-| #16 | #13, #15 | docs/roadmap |
+| #1 | Aucun | feat/1-modele-donnees |
+| #3 | Aucun | chore/3-structure-mvc |
+| #15 | #1, #3 | feat/15-interface-bootstrap |
+| #2 | #1 | feat/2-table-clients |
+| #4 | #2, #3 | feat/4-connexion-db2 |
+| #5 | #4, #15 | feat/5-liste-clients |
+| #6 | #5 | feat/6-fiche-client |
+| #7 | #5 | feat/7-recherche-clients |
+| #14 | #3 | feat/14-securite-web |
+| #8 | #3, #4 | feat/8-passerelle-rpg |
+| #9 | #1, #2, #8 | feat/9-rpg-ajout-client |
+| #10 | #5, #6, #8, #9, #14 | feat/10-formulaire-ajout |
+| #11 | #9 | feat/11-rpg-modification-client |
+| #12 | #6, #10, #11, #14 | feat/12-formulaire-modification |
+| #13 | #7, #10, #12, #14, #15 | docs/13-installation-validation |
+| #16 | #13, #15 | Aucune — après V1 |
 
 Les numéros et branches sont conservés pour préserver les liens Development et l’historique. Avant tout développement, actualiser la branche depuis main. Une PR référence son issue avec Closes #numéro.
 
