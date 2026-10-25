@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Erreur — Annuaire{% endblock %}
+
+{% block content %}
+    <h1>Une erreur est survenue</h1>
+
+    <p>Réessayez ultérieurement.</p>
+
+    <a href="{{ path('clients_index') }}">
+        Retour aux clients
+    </a>
+{% endblock %}
