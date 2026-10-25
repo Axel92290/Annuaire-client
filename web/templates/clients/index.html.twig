@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Clients — Annuaire{% endblock %}
+
+{% block content %}
+    <h1>Clients</h1>
+
+    <form method="get" action="{{ path('clients_index') }}">
+        <label for="recherche">Nom du client</label>
+
+        <input
+            id="recherche"
+            name="q"
+            type="search"
+            value="{{ recherche }}"
+        >
+
+        <button type="submit">Rechercher</button>
+    </form>
+
+    <p>{{ clients|length }} résultat(s)</p>
+
+    {% if clients is empty %}
+        <p>Aucun client à afficher.</p>
+    {% endif %}
+
+    <a href="{{ path('clients_new') }}">
+        Nouveau client
+    </a>
+{% endblock %}

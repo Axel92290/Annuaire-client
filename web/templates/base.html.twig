@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>{% block title %}Annuaire clients{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <a href="{{ path('clients_index') }}">
+            Annuaire clients
+        </a>
+    </header>
+
+    {% if modeDemo %}
+        <p>Mode démonstration — aucun enregistrement réel.</p>
+    {% endif %}
+
+    {% include 'partials/_flash.html.twig' with {
+        messagesFlash: messagesFlash
+    } only %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

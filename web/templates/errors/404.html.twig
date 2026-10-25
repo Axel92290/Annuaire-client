@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Page introuvable — Annuaire{% endblock %}
+
+{% block content %}
+    <h1>Page introuvable</h1>
+
+    <p>La page ou le client demandé n’existe pas.</p>
+
+    <a href="{{ path('clients_index') }}">
+        Retour aux clients
+    </a>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau client — Annuaire{% endblock %}
+
+{% block content %}
+    <h1>Nouveau client</h1>
+
+    {% if not ecritureActive %}
+        <p>
+            Le formulaire sera intégré à l’étape suivante.
+            L’enregistrement est désactivé.
+        </p>
+    {% endif %}
+
+    <a href="{{ path('clients_index') }}">
+        Retour aux clients
+    </a>
+{% endblock %}

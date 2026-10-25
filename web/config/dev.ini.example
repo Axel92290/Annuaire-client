@@ -1,0 +1,4 @@
+[app]
+debug = true
+mode_demo = true
+timezone = "Europe/Paris"
