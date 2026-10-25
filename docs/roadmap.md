@@ -4,7 +4,7 @@ Statut : plan de réalisation. Aucune case n’est considérée terminée par la
 
 ## Référence et principe
 
-La maquette fournie (« Annuaire clients — Maquette UI UX.pdf » et « figma_p2_annuaire-client.PNG ») guide les écrans, les composants et le comportement mobile. Ces références ont été fournies pendant la préparation ; ce document ne prétend pas qu’elles sont déjà versionnées dans le dépôt.
+La [nouvelle référence UI/UX](maquettes/README.md), adoptée le 25 octobre 2026, guide les écrans, les composants et le comportement mobile. Le [PDF](maquettes/maquette-ui-ux.pdf) et les [notes de parcours et d’accessibilité](maquettes/parcours-accessibilite.png) sont versionnés dans le dépôt. Les titres utilisent Libre Caslon Display et le corps Hanken Grotesk ; palette neutre, angles droits, filets fins et absence d’ombres remplacent les anciens choix visuels.
 
 Le contrat des champs est fixé dans #1. Le socle PHP/Twig est créé dans #3, puis toute l’interface dans #15 avec des données fictives. Les issues de lecture et d’écriture remplacent ensuite la source des données et branchent les traitements sur les mêmes templates.
 
@@ -24,11 +24,12 @@ L’ordre décrit des livrables, pas une obligation d’attendre pour toutes les
 ## Validation de l’interface dans #15
 
 - Templates définitifs : liste, fiche, ajout, modification, formulaire partagé, pages 404 et 500.
-- Assets Bootstrap locaux et styles proches de la maquette ; conserver les licences et les solutions de repli des polices.
+- Assets Bootstrap et polices locaux ; Libre Caslon Display pour les titres/noms et Hanken Grotesk pour le texte ; conserver les licences et les solutions de repli.
+- Respecter les couleurs, espacements, filets et angles droits de la référence ; adapter les composants Bootstrap pour obtenir ce rendu.
 - Liste normale et vide, recherche sans résultat, erreurs de formulaire et erreur technique présentée à l’utilisateur.
-- Navigation mobile et clavier ; vérification aux largeurs 390, 768 et 1280 px.
+- Navigation mobile et clavier ; vérification aux largeurs 390, 768 et 1280 px, cibles de 48 px, focus de 2 px, contraste du texte d’au moins 4,5:1 et résumé d’erreurs annoncé.
 - Routes GET utilisables sans Db2, compte PUB400 ou pilote IBM installé.
-- Recherche fictive cohérente et compteurs calculés depuis les résultats : corriger l’écart entre le compteur et les lignes de l’exemple.
+- Recherche fictive cohérente et compteurs calculés depuis les résultats (quatre résultats « Mar » dans la référence) ; références affichées sur six chiffres, par exemple 000128, sans modifier l’identifiant en base.
 - Aucun texte d’explication technique du CSRF dans le parcours utilisateur.
 - Aucun faux succès d’enregistrement. Les écritures métier ne sont activées qu’après #10 et #12.
 - Chargement et soumission en cours uniquement lorsque ces états correspondent à une interaction réelle.

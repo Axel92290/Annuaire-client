@@ -6,7 +6,7 @@ Projet pédagogique d’annuaire clients en PHP MVC, avec des lectures dans Db2 
 
 ## Ordre de réalisation
 
-La maquette fournie sert de référence. On construit d’abord une interface Twig et Bootstrap fonctionnelle avec des données fictives, puis on branche les lectures Db2 et les écritures RPG sur les mêmes écrans.
+La [nouvelle maquette UI/UX](docs/maquettes/README.md) sert de référence : titres Libre Caslon Display, texte Hanken Grotesk, palette neutre, filets et angles droits. Le PDF et les notes de parcours sont versionnés dans docs/maquettes/. On construit d’abord une interface Twig et Bootstrap fonctionnelle avec des données fictives, puis on branche les lectures Db2 et les écritures RPG sur les mêmes écrans.
 
 | Étape | Livrable | Issues |
 |---|---|---|
@@ -52,7 +52,7 @@ Les routes fixes comme /clients/new doivent être résolues avant la route dynam
 | Protection des formulaires | symfony/security-csrf |
 | Validation serveur | symfony/validator |
 | Templates | twig/twig, héritage et échappement HTML automatique |
-| Interface | Bootstrap 5.3, assets locaux, styles du projet |
+| Interface | Bootstrap 5.3 adapté à la maquette, assets et polices locaux, styles du projet |
 | JavaScript | JavaScript natif, limité aux interactions utiles |
 | Lectures réelles | PDO_ODBC et pilote IBM i Access ODBC vers Db2 |
 | Écritures réelles | Programmes SQLRPGLE CLTADD et CLTUPD via une passerelle à valider |
@@ -90,6 +90,10 @@ docs/
   architecture-web.md
   roadmap.md
   diagrammes/
+  maquettes/
+    README.md
+    maquette-ui-ux.pdf
+    parcours-accessibilite.png
 sql/
 rpg/
 web/
