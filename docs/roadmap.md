@@ -8,6 +8,10 @@ La [nouvelle référence UI/UX](maquettes/README.md), adoptée le 25 octobre 202
 
 Le contrat des champs est fixé dans #1. Le socle PHP/Twig est créé dans #3, puis toute l’interface dans #15 avec des données fictives. Les issues de lecture et d’écriture remplacent ensuite la source des données et branchent les traitements sur les mêmes templates.
 
+Le livrable documentaire de #1 est le [contrat des données et des écrans](modele-donnees.md),
+complété par les [diagrammes du contrat](diagrammes/contrat-client.md).
+Ses cas d'acceptation guideront les implémentations ; ils ne constituent pas des tests exécutés.
+
 ## Étapes et critères de passage
 
 | Étape | Issues | Résultat attendu avant de poursuivre |

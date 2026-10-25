@@ -22,6 +22,11 @@ La préparation de la table et un essai ODBC peuvent avancer en parallèle. Leur
 
 Voir la [feuille de route détaillée](docs/roadmap.md) pour les critères de passage entre les étapes et la [décision d’architecture](docs/architecture-web.md) pour Twig et BaseController.
 
+Le [contrat des données et des écrans](docs/modele-donnees.md), établi pour #1,
+définit les champs, les valeurs facultatives, la référence affichée et les variables
+des templates. Les [diagrammes du contrat](docs/diagrammes/contrat-client.md)
+précisent les types du modèle initial.
+
 ## Périmètre de la V1
 
 - Liste des clients et recherche par nom.
