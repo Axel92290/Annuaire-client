@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Service indisponible — Annuaire{% endblock %}
+
+{% block content %}
+    <section class="error-page">
+        <p class="eyebrow">503 · Annuaire</p>
+        <h1>Le service est indisponible</h1>
+
+        <p>
+            Les fiches clients ne sont pas accessibles pour le moment.
+            Réessayez dans quelques instants.
+        </p>
+
+        <a
+            class="btn btn-outline-primary"
+            href="{{ path('clients_index') }}"
+        >
+            Retour aux clients
+        </a>
+    </section>
+{% endblock %}

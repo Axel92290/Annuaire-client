@@ -49,6 +49,8 @@ if (searchForm && searchInput && results && searchStatus) {
         const controller = new AbortController();
 
         activeRequest = controller;
+        searchStatus.classList.add("visually-hidden");
+        searchStatus.classList.remove("notice", "notice-error");
 
         const url = new URL(searchForm.action, window.location.href);
         const query = searchInput.value.trim();
@@ -110,7 +112,9 @@ if (searchForm && searchInput && results && searchStatus) {
             }
 
             searchStatus.textContent =
-                "La recherche est indisponible. Réessayez dans un instant.";
+                "La recherche est indisponible. Les résultats précédents restent affichés. Réessayez dans un instant.";
+            searchStatus.classList.remove("visually-hidden");
+            searchStatus.classList.add("notice", "notice-error");
         } finally {
             if (requestVersion === version) {
                 results.removeAttribute("aria-busy");
@@ -118,7 +122,7 @@ if (searchForm && searchInput && results && searchStatus) {
         }
     }
 
-    function scheduleSearch() {
+    function cancelPendingSearch() {
         window.clearTimeout(timer);
 
         // Annuler immédiatement la recherche précédente.
@@ -127,6 +131,12 @@ if (searchForm && searchInput && results && searchStatus) {
 
         results.removeAttribute("aria-busy");
         searchStatus.textContent = "";
+        searchStatus.classList.add("visually-hidden");
+        searchStatus.classList.remove("notice", "notice-error");
+    }
+
+    function scheduleSearch() {
+        cancelPendingSearch();
 
         // Attendre une courte pause avant d'interroger le serveur.
         timer = window.setTimeout(searchClients, 300);
@@ -139,6 +149,7 @@ if (searchForm && searchInput && results && searchStatus) {
     });
 
     // Respecter les méthodes de saisie utilisant une composition.
+    searchInput.addEventListener("compositionstart", cancelPendingSearch);
     searchInput.addEventListener("compositionend", scheduleSearch);
 
     searchForm.addEventListener("submit", (event) => {
