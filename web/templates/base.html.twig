@@ -1,77 +1,99 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <title>{% block title %}Annuaire clients{% endblock %}</title>
-
-    <link
-        rel="stylesheet"
-        href="/assets/vendor/bootstrap/bootstrap.min.css"
-    >
-    <link rel="stylesheet" href="/assets/css/app.css">
-
-    <script src="/assets/js/app.js" defer></script>
-</head>
-<body>
-    <a class="skip-link" href="#contenu">
-        Aller au contenu
-    </a>
-
-    <header class="site-header">
-        <nav
-            class="page-container header-inner"
-            aria-label="Navigation principale"
+    <head>
+        <meta charset="UTF-8">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
         >
-            <a
-                class="nav-label"
-                href="{{ path('clients_index') }}"
+
+        <title>{% block title %}Annuaire clients{% endblock %}</title>
+
+        <link
+            rel="stylesheet"
+            href="/assets/vendor/bootstrap/bootstrap.min.css"
+        >
+        <link rel="stylesheet" href="/assets/css/app.css">
+
+        <script src="/assets/js/app.js" defer></script>
+    </head>
+    <body>
+        <a class="skip-link" href="#contenu">
+            Aller au contenu
+        </a>
+
+        <header class="site-header">
+            <nav
+                class="page-container header-inner"
+                aria-label="Navigation principale"
             >
-                Clients
-            </a>
+                <a
+                    class="nav-label"
+                    href="{{ path('clients_index') }}"
+                >
+                    Clients
+                </a>
 
-            <a
-                class="wordmark"
-                href="{{ path('clients_index') }}"
-                aria-label="Annuaire — accueil"
-            >
-                [ MAISON ]
-            </a>
+                <a
+                    class="wordmark"
+                    href="{{ path('clients_index') }}"
+                    aria-label="Annuaire — accueil"
+                >
+                    [ MAISON ]
+                </a>
 
-            <span class="nav-label header-context">
-                Annuaire clients
-            </span>
-        </nav>
-    </header>
+                {% if utilisateur %}
+                    <div class="header-context">
+                        <span>{{ utilisateur }}</span>
 
-    {% if modeDemo %}
-        <aside class="demo-banner" aria-label="Mode démonstration">
-            <div class="page-container">
-                Démonstration · Données fictives ·
-                Aucun enregistrement réel
-            </div>
-        </aside>
-    {% endif %}
+                        <form
+                            method="post"
+                            action="{{ path('auth_logout') }}"
+                            class="d-inline"
+                        >
+                            <input
+                                type="hidden"
+                                name="_token"
+                                value="{{ csrf_token('auth_logout') }}"
+                            >
 
-    <main
-        id="contenu"
-        class="page-container main-content"
-        tabindex="-1"
-    >
-        {% include 'partials/_flash.html.twig' with {
+                            <button class="btn btn-outline-primary" type="submit">
+                                Déconnexion
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <span class="nav-label header-context">
+                        Annuaire clients
+                    </span>
+                {% endif %}
+            </nav>
+        </header>
+
+        {% if modeDemo %}
+            <aside class="demo-banner" aria-label="Mode démonstration">
+                <div class="page-container">
+                    Démonstration · Données fictives ·
+                    Aucun enregistrement réel
+                </div>
+            </aside>
+        {% endif %}
+
+        <main
+            id="contenu"
+            class="page-container main-content"
+            tabindex="-1"
+        >
+            {% include 'partials/_flash.html.twig' with {
             messagesFlash: messagesFlash
         } only %}
 
-        {% block content %}{% endblock %}
-    </main>
+            {% block content %}{% endblock %}
+        </main>
 
-    <footer class="page-container site-footer">
-        <span>Annuaire clients</span>
-        <span>Un répertoire, simplement.</span>
-    </footer>
-</body>
+        <footer class="page-container site-footer">
+            <span>Annuaire clients</span>
+            <span>Un répertoire, simplement.</span>
+        </footer>
+    </body>
 </html>

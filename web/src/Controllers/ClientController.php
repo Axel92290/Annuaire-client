@@ -11,22 +11,13 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Twig\Environment;
+use App\Services\ClientInputValidator;
 
 final class ClientController extends BaseController
 {
     // Limites de caractères pour chaque champ du formulaire.
-    private const FIELDS = [
-        'nom' => 100,
-        'prenom' => 100,
-        'email' => 254,
-        'telephone' => 30,
-        'adresse' => 255,
-        'codePostal' => 20,
-        'ville' => 100,
-    ];
+    private const FIELDS = ClientInputValidator::FIELDS;
 
     // Le paramètre $scenario permet de simuler différents comportements
     // de l'application pour les tests fonctionnels.
@@ -35,8 +26,9 @@ final class ClientController extends BaseController
         Session $session,
         private readonly bool $demoEnabled,
         private readonly CsrfTokenManagerInterface $csrf,
-        private readonly ValidatorInterface $validator,
+        private readonly ClientInputValidator $inputValidator,
         private readonly string $scenario = 'normal',
+
     ) {
         parent::__construct(
             $twig,
@@ -118,8 +110,8 @@ final class ClientController extends BaseController
 
         $clients = array_values(array_filter(
             $this->clients(),
-            static fn (Client $client): bool =>
-                $query === ''
+            static fn(Client $client): bool =>
+            $query === ''
                 || mb_stripos($client->nom, $query) !== false
         ));
 
@@ -127,7 +119,7 @@ final class ClientController extends BaseController
             'clients' => $clients,
             'recherche' => $query,
             'apercuConfirmation' =>
-                $this->scenario === 'confirmation',
+            $this->scenario === 'confirmation',
         ]);
     }
 
@@ -208,7 +200,11 @@ final class ClientController extends BaseController
                     ? '/clients/' . $client->id . '/preview'
                     : '/clients/preview',
                 'csrfToken' => $this->csrf
-                    ->getToken('client_preview')
+                    ->getToken(
+                        $client === null
+                            ? 'client_create'
+                            : 'client_update_' . $client->id
+                    )
                     ->getValue(),
                 'ecritureActive' => false,
                 'apercuValide' => $validated,
@@ -217,88 +213,54 @@ final class ClientController extends BaseController
         );
     }
 
-    public function preview(
-        Request $request,
-        ?string $id = null
-    ): Response {
-        if ($response = $this->interruption()) {
-            return $response;
-        }
+public function preview(
+    Request $request,
+    ?string $id = null
+): Response {
+    if ($response = $this->interruption()) {
+        return $response;
+    }
 
-        $client = $id === null
-            ? null
-            : $this->find($id);
+    $client = $id === null
+        ? null
+        : $this->find($id);
 
-        $input = $request->request->all();
-        $values = [];
-        $errors = [];
+    $input = $request->request->all();
+    $token = $input['_token'] ?? '';
 
-        foreach (self::FIELDS as $field => $limit) {
-            $value = $input[$field] ?? '';
+    $tokenId = $client === null
+        ? 'client_create'
+        : 'client_update_' . $client->id;
 
-            $values[$field] = is_string($value)
-                ? $value
-                : '';
-
-            if (!is_string($value)) {
-                $errors[$field][] =
-                    'Renseignez une valeur textuelle.';
-                continue;
-            }
-
-            $normalized = trim($value);
-
-            if ($field === 'nom' && $normalized === '') {
-                $errors[$field][] =
-                    'Renseignez le nom du client.';
-            }
-
-            if (mb_strlen($normalized) > $limit) {
-                $errors[$field][] =
-                    "Limitez ce champ à $limit caractères.";
-            }
-
-            if (
-                $field === 'email'
-                && $normalized !== ''
-                && count($this->validator->validate(
-                    $normalized,
-                    new Assert\Email()
-                )) > 0
-            ) {
-                $errors[$field][] =
-                    'L’adresse e-mail n’est pas valide.';
-            }
-        }
-
-        $token = $input['_token'] ?? '';
-
-        if (
-            !is_string($token)
-            || !$this->csrf->isTokenValid(
-                new CsrfToken('client_preview', $token)
-            )
-        ) {
-            $errors['_global'][] =
-                'La page a expiré. Vérifiez vos informations'
-                . ' puis réessayez.';
-
-            return $this->form(
-                $client,
-                $values,
-                $errors,
-                403
-            );
-        }
-
+    if (
+        !is_string($token)
+        || !$this->csrf->isTokenValid(
+            new CsrfToken($tokenId, $token)
+        )
+    ) {
         return $this->form(
             $client,
-            $values,
-            $errors,
-            $errors ? 422 : 200,
-            !$errors
+            $this->inputValidator->values($input),
+            [
+                '_global' => [
+                    'La page a expiré. Vérifiez vos informations'
+                    . ' puis réessayez.',
+                ],
+            ],
+            403
         );
     }
+
+    $result = $this->inputValidator->validate($input);
+
+    return $this->form(
+        $client,
+        $result['values'],
+        $result['errors'],
+        $result['errors'] === [] ? 200 : 422,
+        $result['errors'] === []
+    );
+}
 
     public function error(int $status): Response
     {

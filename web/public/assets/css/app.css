@@ -688,4 +688,24 @@ h3 {
         transition: none !important;
         animation: none !important;
     }
+
+    .header-context {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+@media (max-width: 991.98px) {
+    .header-inner {
+        grid-template-columns: 1fr auto;
+    }
+
+    .header-context {
+        grid-column: 1 / -1;
+        justify-self: stretch;
+        justify-content: space-between;
+        padding-bottom: 16px;
+    }
+}
 }
