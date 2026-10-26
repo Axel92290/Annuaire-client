@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ client.nom }} — Annuaire{% endblock %}
+
+{% block content %}
+    <div class="row gx-4 form-layout">
+        <div class="col-lg-5 form-intro">
+            <a
+                class="text-action back-link"
+                href="{{ path('clients_show', {id: client.id}) }}"
+            >
+                ← Annuler
+            </a>
+
+            <p class="eyebrow">
+                Réf. {{ '%06d'|format(client.id) }}
+            </p>
+
+            <h1>Modifier la fiche</h1>
+            <p class="eyebrow required-note">* Champ obligatoire</p>
+        </div>
+
+        <div class="col-lg-7">
+            {% include 'clients/_form.html.twig' with {
+                client: client,
+                valeurs: valeurs,
+                erreurs: erreurs,
+                actionFormulaire: actionFormulaire,
+                actionApercu: actionApercu,
+                csrfToken: csrfToken,
+                ecritureActive: ecritureActive,
+                apercuValide: apercuValide
+            } only %}
+        </div>
+    </div>
+{% endblock %}

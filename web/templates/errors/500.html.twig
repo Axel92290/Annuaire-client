@@ -3,11 +3,21 @@
 {% block title %}Erreur — Annuaire{% endblock %}
 
 {% block content %}
-    <h1>Une erreur est survenue</h1>
+    <section class="error-page">
+        <p class="eyebrow">500 · Annuaire</p>
 
-    <p>Réessayez ultérieurement.</p>
+        <h1>Une erreur est survenue</h1>
 
-    <a href="{{ path('clients_index') }}">
-        Retour aux clients
-    </a>
+        <p>
+            Nous ne pouvons pas afficher cette page pour le moment.
+            Réessayez ultérieurement.
+        </p>
+
+        <a
+            class="btn btn-outline-primary"
+            href="{{ path('clients_index') }}"
+        >
+            Retour aux clients
+        </a>
+    </section>
 {% endblock %}

@@ -3,16 +3,31 @@
 {% block title %}Nouveau client — Annuaire{% endblock %}
 
 {% block content %}
-    <h1>Nouveau client</h1>
+    <div class="row gx-4 form-layout">
+        <div class="col-lg-5 form-intro">
+            <a
+                class="text-action back-link"
+                href="{{ path('clients_index') }}"
+            >
+                ← Annuler
+            </a>
 
-    {% if not ecritureActive %}
-        <p>
-            Le formulaire sera intégré à l’étape suivante.
-            L’enregistrement est désactivé.
-        </p>
-    {% endif %}
+            <p class="eyebrow">Annuaire</p>
+            <h1>Nouveau client</h1>
+            <p class="eyebrow required-note">* Champ obligatoire</p>
+        </div>
 
-    <a href="{{ path('clients_index') }}">
-        Retour aux clients
-    </a>
+        <div class="col-lg-7">
+            {% include 'clients/_form.html.twig' with {
+                client: client,
+                valeurs: valeurs,
+                erreurs: erreurs,
+                actionFormulaire: actionFormulaire,
+                actionApercu: actionApercu,
+                csrfToken: csrfToken,
+                ecritureActive: ecritureActive,
+                apercuValide: apercuValide
+            } only %}
+        </div>
+    </div>
 {% endblock %}

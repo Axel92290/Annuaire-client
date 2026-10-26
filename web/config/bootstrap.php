@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+// Récupération de la configuration locale.
 $environment = getenv('APP_ENV') ?: 'dev';
 
 if (!in_array($environment, ['dev', 'prod'], true)) {
@@ -16,6 +17,7 @@ if (!is_file($configPath)) {
     throw new RuntimeException('Configuration locale absente.');
 }
 
+// Chargement de la configuration locale.
 $config = parse_ini_file(
     $configPath,
     true,
@@ -48,8 +50,27 @@ if (
 
 date_default_timezone_set($app['timezone']);
 
+$scenario = $config['demo']['scenario'] ?? 'normal';
+
+$allowedScenarios = [
+    'normal',
+    'empty',
+    'form-errors',
+    'confirmation',
+    'unavailable',
+    'error',
+    'long-city',
+];
+
+if (!in_array($scenario, $allowedScenarios, true)) {
+    throw new RuntimeException(
+        'Scénario de démonstration inconnu.'
+    );
+}
+
 return [
     'environment' => $environment,
     'debug' => $app['debug'],
     'mode_demo' => $app['mode_demo'],
+    'demo_scenario' => $scenario,
 ];

@@ -8,24 +8,70 @@
     >
 
     <title>{% block title %}Annuaire clients{% endblock %}</title>
+
+    <link
+        rel="stylesheet"
+        href="/assets/vendor/bootstrap/bootstrap.min.css"
+    >
+    <link rel="stylesheet" href="/assets/css/app.css">
+
+    <script src="/assets/js/app.js" defer></script>
 </head>
 <body>
-    <header>
-        <a href="{{ path('clients_index') }}">
-            Annuaire clients
-        </a>
+    <a class="skip-link" href="#contenu">
+        Aller au contenu
+    </a>
+
+    <header class="site-header">
+        <nav
+            class="page-container header-inner"
+            aria-label="Navigation principale"
+        >
+            <a
+                class="nav-label"
+                href="{{ path('clients_index') }}"
+            >
+                Clients
+            </a>
+
+            <a
+                class="wordmark"
+                href="{{ path('clients_index') }}"
+                aria-label="Annuaire — accueil"
+            >
+                [ MAISON ]
+            </a>
+
+            <span class="nav-label header-context">
+                Annuaire clients
+            </span>
+        </nav>
     </header>
 
     {% if modeDemo %}
-        <p>Mode démonstration — aucun enregistrement réel.</p>
+        <div class="demo-banner">
+            <div class="page-container">
+                Démonstration · Données fictives ·
+                Aucun enregistrement réel
+            </div>
+        </div>
     {% endif %}
 
-    {% include 'partials/_flash.html.twig' with {
-        messagesFlash: messagesFlash
-    } only %}
+    <main
+        id="contenu"
+        class="page-container main-content"
+        tabindex="-1"
+    >
+        {% include 'partials/_flash.html.twig' with {
+            messagesFlash: messagesFlash
+        } only %}
 
-    <main>
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="page-container site-footer">
+        <span>Annuaire clients</span>
+        <span>Un répertoire, simplement.</span>
+    </footer>
 </body>
 </html>
