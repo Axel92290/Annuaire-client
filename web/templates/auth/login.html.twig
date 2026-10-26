@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion — Annuaire{% endblock %}
+
+{% block content %}
+    <section class="error-page">
+        <p class="eyebrow">Accès à l’annuaire</p>
+        <h1>Connexion</h1>
+
+        {% if erreursConnexion %}
+            <div
+                class="notice notice-error"
+                role="alert"
+                tabindex="-1"
+                data-focus-errors
+            >
+                {% for erreur in erreursConnexion %}
+                    <p>{{ erreur }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{{ path('auth_login') }}">
+            <input
+                type="hidden"
+                name="_token"
+                value="{{ csrfToken }}"
+            >
+
+            <div class="field-group">
+                <label class="form-label" for="username">
+                    Identifiant
+                </label>
+
+                <input
+                    class="form-control"
+                    id="username"
+                    name="username"
+                    type="text"
+                    value="{{ identifiant }}"
+                    autocomplete="username"
+                    required
+                >
+            </div>
+
+            <div class="field-group">
+                <label class="form-label" for="password">
+                    Mot de passe
+                </label>
+
+                <input
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                Se connecter
+            </button>
+        </form>
+    </section>
+{% endblock %}

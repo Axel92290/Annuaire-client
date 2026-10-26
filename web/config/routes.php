@@ -52,4 +52,16 @@ $routes->add('clients_show', new Route(
     methods: ['GET']
 ));
 
+$routes->add('auth_login', new Route(
+    '/login',
+    ['_action' => 'login'],
+    methods: ['GET', 'POST']
+));
+
+$routes->add('auth_logout', new Route(
+    '/logout',
+    ['_action' => 'logout'],
+    methods: ['POST']
+));
+
 return $routes;
