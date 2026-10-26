@@ -2,7 +2,7 @@
 
 Projet pédagogique d’annuaire clients en PHP MVC, avec des lectures dans Db2 sur IBM i et des écritures réalisées par des programmes RPG.
 
-**État du dépôt : conception et préparation.** L’arborescence et les dépendances ci-dessous sont la cible à implémenter. Le dépôt ne fournit pas encore une application démarrable.
+**État du dépôt : interface de démonstration disponible.** Le socle PHP/Twig et les écrans Bootstrap fonctionnent avec des données fictives, sans Db2 ni RPG. Les formulaires vérifient les saisies sans enregistrer de client. Voir le [guide de démarrage et de validation](docs/interface-demo.md).
 
 ## Ordre de réalisation
 
@@ -17,8 +17,8 @@ La [nouvelle maquette UI/UX](docs/maquettes/README.md) sert de référence : tit
 | 5 | Recette complète et documentation d’installation | [#13](../../issues/13) |
 | Après V1 | TypeScript, seulement si les besoins JavaScript le justifient | [#16](../../issues/16) |
 
-**Prochaine tâche de développement : #3, en parallèle de la validation des champs dans #1, puis #15.**
-La préparation de la table et un essai ODBC peuvent avancer en parallèle. Leur disponibilité ne doit pas bloquer l’interface.
+**Suite du développement : table Db2 (#2), connexion ODBC (#4) et sécurité web (#14), selon leurs prérequis.**
+L'interface reste utilisable indépendamment de ces intégrations.
 
 Voir la [feuille de route détaillée](docs/roadmap.md) pour les critères de passage entre les étapes et la [décision d’architecture](docs/architecture-web.md) pour Twig et BaseController.
 
@@ -141,14 +141,15 @@ web/
     log/
 ```
 
-Cette arborescence décrit la cible ; les classes d’intégration sont ajoutées lors des issues correspondantes. Les données fictives sont chargées côté PHP et partagent le contrat des vues avec les données Db2. Elles ne sont jamais choisies via un chemin transmis par l’utilisateur.
+Cette arborescence décrit la cible complète ; les classes d’intégration sont ajoutées lors des issues correspondantes. Les données fictives sont chargées côté PHP et partagent le contrat des vues avec les données Db2. Elles ne sont jamais choisies via un chemin transmis par l’utilisateur.
 
 Seul **web/public/** doit être exposé par Apache. Les templates, fichiers INI, sources, dépendances et journaux restent hors du répertoire public.
 
 ## Configuration et dépendances
 
-Composer sera initialisé dans web/ dans #3, avec un autoload PSR-4 pour App vers src/.
-Les dépendances directes prévues sont :
+Composer est initialisé dans web/, avec un autoload PSR-4 pour App vers src/.
+Le projet nécessite PHP 8.2 ou supérieur, inférieur à PHP 9, et Composer 2.
+Les dépendances directes installées sont :
 
 ```text
 symfony/http-foundation
@@ -158,7 +159,7 @@ symfony/validator
 twig/twig
 ```
 
-Les versions seront choisies selon le PHP installé, puis composer.lock sera commité. Les dépendances réellement nécessaires à l’intégration ODBC seront déclarées dans #4.
+Les versions sont conservées dans composer.lock : utiliser `composer install` pour les reproduire. Les dépendances réellement nécessaires à l’intégration ODBC seront déclarées dans #4.
 
 - config/bootstrap.php charge l’environnement et valide la configuration.
 - config/services.php construit les dépendances et injecte Twig une seule fois.
@@ -169,7 +170,7 @@ Les versions seront choisies selon le PHP installé, puis composer.lock sera com
 - La configuration de démonstration est réservée au développement ; une configuration de production ne doit pas utiliser silencieusement des données fictives.
 - Les paramètres Db2 sont exigés uniquement lorsque les fonctionnalités réelles sont activées.
 
-Les commandes d’installation et la configuration Apache seront documentées avec le code réellement livré, dans #3 puis #13.
+Les commandes d’installation et la configuration Apache sont décrites dans le [guide de démonstration](docs/interface-demo.md). La recette d’intégration IBM i reste à réaliser dans #13.
 
 ## Règles d’architecture et de sécurité
 

@@ -87,6 +87,7 @@ a:hover {
 .form-label,
 .contact-details dt,
 .table thead th {
+    font-family: "Hanken Grotesk", Arial, sans-serif;
     font-size: 12px;
     line-height: 16px;
     letter-spacing: 0.12em;
