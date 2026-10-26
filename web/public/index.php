@@ -25,11 +25,14 @@ try {
         require dirname(__DIR__) . '/config/services.php'
     )($config, $request);
 
-    $controller = new ClientController(
-        $services['twig'],
-        $services['session'],
-        $config['mode_demo']
-    );
+$controller = new ClientController(
+    $services['twig'],
+    $services['session'],
+    $config['mode_demo'],
+    $services['csrf'],
+    $services['validator'],
+    $config['demo_scenario']
+);
 
     $matcher = new UrlMatcher(
         $services['routes'],
@@ -41,13 +44,17 @@ try {
             $request->getPathInfo()
         );
 
-        $response = match ($parameters['_action']) {
-            'index' => $controller->index($request),
-            'new' => $controller->new(),
-            'show' => $controller->show($parameters['id']),
-            'edit' => $controller->edit($parameters['id']),
-            default => throw new ResourceNotFoundException(),
-        };
+$response = match ($parameters['_action']) {
+    'index' => $controller->index($request),
+    'new' => $controller->new(),
+    'show' => $controller->show($parameters['id']),
+    'edit' => $controller->edit($parameters['id']),
+    'preview' => $controller->preview(
+        $request,
+        $parameters['id'] ?? null
+    ),
+    default => throw new ResourceNotFoundException(),
+};
     } catch (ResourceNotFoundException) {
         $response = $controller->error(404);
     } catch (MethodNotAllowedException $exception) {

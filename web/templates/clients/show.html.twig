@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ client.prenom }} {{ client.nom }} — Annuaire
+{% endblock %}
+
+{% block content %}
+    <a class="text-action back-link" href="{{ path('clients_index') }}">
+        ← Clients
+    </a>
+
+    <div class="row gx-4 detail-layout">
+        <div class="col-lg-5 identity">
+            <p class="eyebrow">
+                Réf. {{ '%06d'|format(client.id) }}
+            </p>
+
+            <h1>
+                {% if client.prenom %}
+                    <span>{{ client.prenom }}</span>
+                {% endif %}
+                <span>{{ client.nom }}</span>
+            </h1>
+
+            <a
+                class="btn btn-outline-primary"
+                href="{{ path('clients_edit', {id: client.id}) }}"
+            >
+                Modifier la fiche
+            </a>
+        </div>
+
+        <div class="col-lg-7">
+            <section aria-labelledby="coordonnees">
+                <h2 id="coordonnees" class="eyebrow section-heading">
+                    Coordonnées
+                </h2>
+
+                <dl class="contact-details">
+                    {% for label, value in {
+                        'E-mail': client.email,
+                        'Téléphone': client.telephone,
+                        'Adresse': client.adresse,
+                        'Code postal': client.codePostal,
+                        'Ville': client.ville
+                    } %}
+                        <div>
+                            <dt>{{ label }}</dt>
+                            <dd>{{ value ?? '—' }}</dd>
+                        </div>
+                    {% endfor %}
+                </dl>
+            </section>
+
+            <section class="tracking" aria-labelledby="suivi">
+                <h2 id="suivi" class="eyebrow section-heading">
+                    Suivi
+                </h2>
+
+                <dl class="contact-details">
+                    <div>
+                        <dt>Créé le</dt>
+                        <dd>
+                            <time datetime="{{ client.creeLe|date('c') }}">
+                                {{ client.creeLe|date(
+                                    'd/m/Y, H:i',
+                                    'Europe/Paris'
+                                ) }}
+                            </time>
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Modifié le</dt>
+                        <dd>
+                            <time datetime="{{ client.modifieLe|date('c') }}">
+                                {{ client.modifieLe|date(
+                                    'd/m/Y, H:i',
+                                    'Europe/Paris'
+                                ) }}
+                            </time>
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+        </div>
+    </div>
+{% endblock %}

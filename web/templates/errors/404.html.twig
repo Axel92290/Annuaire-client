@@ -3,11 +3,21 @@
 {% block title %}Page introuvable — Annuaire{% endblock %}
 
 {% block content %}
-    <h1>Page introuvable</h1>
+    <section class="error-page">
+        <p class="eyebrow">404 · Annuaire</p>
 
-    <p>La page ou le client demandé n’existe pas.</p>
+        <h1>Cette page est introuvable</h1>
 
-    <a href="{{ path('clients_index') }}">
-        Retour aux clients
-    </a>
+        <p>
+            La page ou le client demandé n’existe pas.
+            Retrouvez vos clients depuis l’annuaire.
+        </p>
+
+        <a
+            class="btn btn-outline-primary"
+            href="{{ path('clients_index') }}"
+        >
+            Retour aux clients
+        </a>
+    </section>
 {% endblock %}

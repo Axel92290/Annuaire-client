@@ -3,28 +3,200 @@
 {% block title %}Clients — Annuaire{% endblock %}
 
 {% block content %}
-    <h1>Clients</h1>
+    {% if apercuConfirmation %}
+        <div class="notice" role="status">
+            <span class="eyebrow">
+                Aperçu de confirmation · Démonstration
+            </span>
 
-    <form method="get" action="{{ path('clients_index') }}">
-        <label for="recherche">Nom du client</label>
-
-        <input
-            id="recherche"
-            name="q"
-            type="search"
-            value="{{ recherche }}"
-        >
-
-        <button type="submit">Rechercher</button>
-    </form>
-
-    <p>{{ clients|length }} résultat(s)</p>
-
-    {% if clients is empty %}
-        <p>Aucun client à afficher.</p>
+            <p>
+                Exemple de message :
+                « Le client Camille Martin a été enregistré. »
+                Aucune écriture n’a été effectuée.
+            </p>
+        </div>
     {% endif %}
 
-    <a href="{{ path('clients_new') }}">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Annuaire</p>
+            <h1>Clients</h1>
+        </div>
+
+        <a
+            class="btn btn-primary d-none d-sm-inline-flex"
+            href="{{ path('clients_new') }}"
+        >
+            Nouveau client
+        </a>
+    </div>
+
+    <form
+        id="recherche-clients"
+        class="search-form"
+        method="get"
+        action="{{ path('clients_index') }}"
+        role="search"
+        aria-label="Rechercher un client"
+    >
+        <div class="search-field">
+            <label class="form-label" for="recherche">
+                Nom du client
+            </label>
+
+            <input
+                class="form-control"
+                id="recherche"
+                name="q"
+                type="search"
+                value="{{ recherche }}"
+                autocomplete="off"
+            >
+        </div>
+
+        <button class="btn btn-outline-primary" type="submit">
+            Rechercher
+        </button>
+
+        <a class="text-action" href="{{ path('clients_index') }}">
+            Réinitialiser
+        </a>
+    </form>
+
+    <p
+    id="statut-recherche"
+    class="visually-hidden"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+></p>
+
+    <section  id="resultats-clients"  aria-labelledby="resultats">
+        <h2 id="resultats" class="eyebrow results-heading">
+            {{ clients|length }}
+            résultat{{ clients|length > 1 ? 's' : '' }}
+            {% if recherche %}
+                pour « {{ recherche }} »
+            {% endif %}
+        </h2>
+
+        {% if clients is empty %}
+            <div class="empty-state">
+                <h3>
+                    {{ recherche
+                        ? 'Aucun client trouvé'
+                        : 'Votre annuaire est encore vide'
+                    }}
+                </h3>
+
+                <p>
+                    {{ recherche
+                        ? 'Essayez un autre nom ou réinitialisez votre recherche.'
+                        : 'Les fiches clients apparaîtront ici.'
+                    }}
+                </p>
+
+                <a
+                    class="text-action"
+                    href="{{ recherche
+                        ? path('clients_index')
+                        : path('clients_new')
+                    }}"
+                >
+                    {{ recherche
+                        ? 'Voir tous les clients'
+                        : 'Préparer une fiche client'
+                    }}
+                </a>
+            </div>
+        {% else %}
+            <table class="table client-table d-none d-lg-table">
+                <caption class="visually-hidden">
+                    Clients correspondant à votre recherche
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">Réf.</th>
+                        <th scope="col">Nom</th>
+                        <th scope="col">Prénom</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">Téléphone</th>
+                        <th scope="col">Ville</th>
+                        <th scope="col">
+                            <span class="visually-hidden">Fiche</span>
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for client in clients %}
+                        <tr>
+                            <td class="reference">
+                                {{ '%06d'|format(client.id) }}
+                            </td>
+
+                            <th scope="row" class="client-name">
+                                {{ client.nom }}
+                            </th>
+
+                            <td>{{ client.prenom ?? '—' }}</td>
+                            <td>{{ client.email ?? '—' }}</td>
+                            <td>{{ client.telephone ?? '—' }}</td>
+                            <td>{{ client.ville ?? '—' }}</td>
+
+                            <td>
+                                <a
+                                    class="text-action"
+                                    href="{{ path('clients_show', {
+                                        id: client.id
+                                    }) }}"
+                                >
+                                    Consulter
+                                    <span class="visually-hidden">
+                                        la fiche de
+                                        {{ client.prenom }}
+                                        {{ client.nom }}
+                                    </span>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <ul class="mobile-clients d-lg-none">
+                {% for client in clients %}
+                    <li>
+                        <a href="{{ path('clients_show', {
+                            id: client.id
+                        }) }}">
+                            <span class="mobile-client-name">
+                                {{ client.nom }}
+                                {% if client.prenom %}
+                                    {{ client.prenom }}
+                                {% endif %}
+                            </span>
+
+                            <span class="eyebrow">
+                                {{ client.ville ?? 'Ville non renseignée' }}
+                                · {{ '%06d'|format(client.id) }}
+                            </span>
+
+                            <span class="visually-hidden">
+                                Consulter la fiche
+                            </span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    <a
+        class="btn btn-primary mobile-new d-sm-none"
+        href="{{ path('clients_new') }}"
+    >
         Nouveau client
     </a>
 {% endblock %}
