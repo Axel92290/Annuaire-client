@@ -5,3 +5,10 @@ timezone = "Europe/Paris"
 
 [demo]
 scenario = "normal"
+
+[database]
+enabled = false
+dsn = "odbc:DSN=ANNUAIRE_PUB400;SSL=1;"
+username = "AXEL92"
+password = "axel92"
+schema = "AXEL921"

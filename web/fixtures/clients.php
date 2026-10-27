@@ -61,7 +61,7 @@ return [
         '44000',
         'Nantes',
         $created,
-        $updated
+        $updated,
     ),
     new Client(
         305,
