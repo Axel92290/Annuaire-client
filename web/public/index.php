@@ -71,7 +71,7 @@ try {
             'edit',
             'preview',
             'logout',
-            'db2_check',
+            //'db2_check',
         ];
 
         if (
@@ -93,7 +93,7 @@ try {
                     $request,
                     $parameters['id'] ?? null
                 ),
-                'db2_check' => (static function () use (
+                /*'db2_check' => (static function () use (
                     $services,
                     $config
                 ): Response {
@@ -122,7 +122,7 @@ try {
                         'status' => 'ok',
                         'clients' => (int) $statement->fetchColumn(),
                     ]);
-                })(),
+                })(),*/
                 default => throw new ResourceNotFoundException(),
             };
         }

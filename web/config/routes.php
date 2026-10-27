@@ -64,10 +64,10 @@ $routes->add('auth_logout', new Route(
     methods: ['POST']
 ));
 
-$routes->add('diagnostic_db2', new Route(
+/*$routes->add('diagnostic_db2', new Route(
     '/diagnostics/db2',
     ['_action' => 'db2_check'],
     methods: ['GET']
-)); 
+)); */
 
 return $routes;
