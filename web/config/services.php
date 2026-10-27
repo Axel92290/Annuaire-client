@@ -16,11 +16,17 @@ use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
 use App\Services\ClientInputValidator;
+use App\Infrastructure\Db2Connection;
 
 return static function (
     array $config,
     Request $request
+    
 ): array {
+
+    $db2 = new Db2Connection(
+        $config['database'] ?? ['enabled' => false]
+    );
     // 1. Créer la session avant les services qui l'utilisent.
     $session = new Session(new NativeSessionStorage([
         'cookie_httponly' => true,
@@ -124,5 +130,7 @@ $twig->addFunction(new TwigFunction(
         'context' => $context,
         'validator' => $validator,
         'client_input_validator' => $clientInputValidator,
+        'db2' => $db2,
+        
     ];
 };

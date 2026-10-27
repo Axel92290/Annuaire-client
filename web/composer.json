@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": ">=8.2 <9.0",
+        "ext-pdo": "*",
         "symfony/http-foundation": "7.4.*",
         "symfony/routing": "7.4.*",
         "symfony/security-csrf": "7.4.*",
@@ -18,5 +19,13 @@
     },
     "config": {
         "sort-packages": true
-    }
+    },
+
+    "suggest": {
+    "ext-pdo_odbc": "Requise pour les lectures Db2 réelles ; facultative pour la démonstration."
+    },
+    "scripts": {
+    "check:db2": "@php bin/check-db2.php"
+    }  
 }
+

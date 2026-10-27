@@ -71,6 +71,7 @@ try {
             'edit',
             'preview',
             'logout',
+            'db2_check',
         ];
 
         if (
@@ -92,6 +93,36 @@ try {
                     $request,
                     $parameters['id'] ?? null
                 ),
+                'db2_check' => (static function () use (
+                    $services,
+                    $config
+                ): Response {
+                    if ($config['environment'] !== 'dev') {
+                        return new Response('Page introuvable.', 404);
+                    }
+
+                    if (!($config['database']['enabled'] ?? false)) {
+                        return new \Symfony\Component\HttpFoundation\JsonResponse(
+                            ['status' => 'disabled'],
+                            503
+                        );
+                    }
+
+                    $pdo = $services['db2']->getConnection();
+
+                    $schema = $config['database']['schema'];
+
+                    $statement = $pdo->query(
+                        'SELECT COUNT(*) FROM '
+                            . $schema
+                            . '.CLIENTS'
+                    );
+
+                    return new \Symfony\Component\HttpFoundation\JsonResponse([
+                        'status' => 'ok',
+                        'clients' => (int) $statement->fetchColumn(),
+                    ]);
+                })(),
                 default => throw new ResourceNotFoundException(),
             };
         }
