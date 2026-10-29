@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Models\Client;
 
+// Données fictives uniquement : accents, apostrophe, esperluette, valeurs nulles
+// et zéro initial permettent de vérifier le rendu. Les ID ne viennent pas de Db2.
+// Les deux objets de date sont immuables et exprimés explicitement en UTC.
 $created = new DateTimeImmutable(
     '2026-03-12 08:42:00',
     new DateTimeZone('UTC')

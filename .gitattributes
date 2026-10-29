@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
+# Git detecte les fichiers texte et normalise leurs fins de ligne en LF.
+# Les fichiers binaires detectes automatiquement ne sont pas convertis.
 * text=auto

@@ -1,3 +1,7 @@
+{#
+   Contrat : clients (liste de Client), recherche (texte), apercuConfirmation (booléen). Le même
+   rendu complet sert à la navigation et au fetch de recherche.
+#}
 {% extends 'base.html.twig' %}
 
 {% block title %}Clients — Annuaire{% endblock %}
@@ -71,6 +75,9 @@
         aria-atomic="true"
     ></p>
 
+    {#
+       Identifiant utilisé par app.js pour extraire et remplacer uniquement les résultats.
+    #}
     <section id="resultats-clients" aria-labelledby="resultats">
         <h2 id="resultats" class="eyebrow results-heading">
             {{ clients|length }}
@@ -165,6 +172,10 @@
                 </tbody>
             </table>
 
+            {#
+               Alternative mobile au tableau ; les classes Bootstrap évitent l’affichage
+               simultané des deux présentations.
+            #}
             <ul class="mobile-clients d-lg-none">
                 {% for client in clients %}
                     <li>

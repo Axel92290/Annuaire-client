@@ -1,14 +1,29 @@
+; Exemple de configuration : copier vers dev.ini, fichier local ignore par Git.
+; Les lignes commencant par un point-virgule sont des commentaires INI.
+; Renseigner ses propres acces uniquement dans la copie locale.
+; Parametres du socle : bootstrap.php impose des booleens pour debug et mode_demo.
 [app]
+; Reserve au developpement ; interdit en production. Les erreurs HTTP restent generiques.
 debug = true
+; Les ecrans utilisent les fixtures ; false ne raccorde pas automatiquement Db2.
 mode_demo = true
+; Fuseau PHP par defaut ; les dates des fixtures et des ecritures suivent le contrat UTC.
 timezone = "Europe/Paris"
 
+; Scenario choisi cote serveur, parmi la liste autorisee dans bootstrap.php.
 [demo]
+; Autres valeurs : empty, form-errors, confirmation, unavailable, error, long-city.
 scenario = "normal"
 
+; Connexion Db2 optionnelle, ouverte uniquement par getConnection().
 [database]
+; false : aucun acces IBM i requis. true : dsn, username, password et schema obligatoires.
 enabled = false
+; DSN PDO_ODBC : pilote IBM installe, source systeme de meme architecture et TLS configure.
 dsn = "odbc:DSN=ANNUAIRE_PUB400;SSL=1;"
+; Profil IBM i pour ODBC, distinct du compte web de auth.local.php.
 username = ""
+; Secret prive : ne jamais versionner une valeur reelle ni la recopier dans les journaux.
 password = ""
+; Bibliotheque autorisee ; son nom est valide avant utilisation comme identifiant SQL.
 schema = "AXEL921"

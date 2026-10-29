@@ -14,6 +14,12 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use App\Services\ClientInputValidator;
 
+/**
+ * Pilote les écrans clients de démonstration à partir des fixtures PHP.
+ *
+ * Aucune méthode de ce contrôleur ne lit Db2 ou n'enregistre de client.
+ * Les scénarios permettent de vérifier les états des écrans sans IBM i.
+ */
 final class ClientController extends BaseController
 {
     // Limites de caractères pour chaque champ du formulaire.
@@ -21,6 +27,12 @@ final class ClientController extends BaseController
 
     // Le paramètre $scenario permet de simuler différents comportements
     // de l'application pour les tests fonctionnels.
+    /**
+     * Injecte les dépendances communes et le scénario choisi côté serveur.
+     *
+     * Le validateur traite les saisies ; le gestionnaire CSRF lie le formulaire
+     * à la session et à l’action de création ou au client à modifier.
+     */
     public function __construct(
         Environment $twig,
         Session $session,
@@ -39,6 +51,12 @@ final class ClientController extends BaseController
 
     // Cette méthode permet de simuler des interruptions de service
     // pour les tests fonctionnels. Elle retourne une réponse d'erreur  
+    /**
+     * Interrompt un parcours si la démonstration est désactivée ou en panne simulée.
+     *
+     * Retourne null lorsque l’action peut continuer, sinon une réponse 503 ou 500.
+     * Le mode réel n’est pas encore raccordé aux écrans.
+     */
     private function interruption(): ?Response
     {
         if (
@@ -55,7 +73,13 @@ final class ClientController extends BaseController
         return null;
     }
 
-    /** @return list<Client> */
+    /**
+     * Charge le jeu fictif à chaque appel ; aucune mutation n’est conservée.
+     *
+     * Le scénario empty retourne une liste vide ; long-city remplace un objet
+     * immuable pour éprouver les mises en page avec un texte long.
+     * @return list<Client>
+     */
     private function clients(): array
     {
         if ($this->scenario === 'empty') {
@@ -86,6 +110,12 @@ final class ClientController extends BaseController
         return $clients;
     }
 
+    /**
+     * Cherche une fixture en comparant les identifiants comme chaînes.
+     *
+     * Évite une conversion numérique des identifiants fournis dans l’URL.
+     * @throws ResourceNotFoundException Si aucun client ne correspond ; index.php produit la 404.
+     */
     private function find(string $id): Client
     {
         foreach ($this->clients() as $client) {
@@ -99,6 +129,12 @@ final class ClientController extends BaseController
         );
     }
 
+    /**
+     * Filtre les fixtures par fragment de nom, sans tenir compte de la casse.
+     *
+     * Le paramètre GET q doit être une chaîne ; un tableau est traité comme
+     * une recherche vide. La même page HTML sert au GET classique et à fetch.
+     */
     public function index(Request $request): Response
     {
         if ($response = $this->interruption()) {
@@ -108,6 +144,8 @@ final class ClientController extends BaseController
         $query = $request->query->all()['q'] ?? '';
         $query = is_string($query) ? trim($query) : '';
 
+        // Le predicat conserve tous les clients si q est vide ; sinon il cherche
+        // une sous-chaine du nom. array_values retablit une liste indexee apres filtrage.
         $clients = array_values(array_filter(
             $this->clients(),
             static fn(Client $client): bool =>
@@ -123,12 +161,18 @@ final class ClientController extends BaseController
         ]);
     }
 
+    /**
+     * Affiche le formulaire vide, sauf interruption de la démonstration.
+     */
     public function new(): Response
     {
         return $this->interruption()
             ?? $this->form(null);
     }
 
+    /**
+     * Affiche la fiche trouvée ou laisse remonter son absence en 404.
+     */
     public function show(string $id): Response
     {
         if ($response = $this->interruption()) {
@@ -140,6 +184,9 @@ final class ClientController extends BaseController
         ]);
     }
 
+    /**
+     * Préremplit le formulaire avec la fixture existante, sans la modifier.
+     */
     public function edit(string $id): Response
     {
         if ($response = $this->interruption()) {
@@ -149,6 +196,16 @@ final class ClientController extends BaseController
         return $this->form($this->find($id));
     }
 
+    /**
+     * Prépare les variables communes aux formulaires d’ajout et de modification.
+     *
+     * Sans valeurs explicites, préremplit depuis le client ou avec des chaînes vides.
+     * Après un POST, conserve les valeurs saisies et les erreurs par champ.
+     * Le jeton distingue client_create de client_update_{id}.
+     * @param array<string, string>|null $values Saisies à réafficher.
+     * @param array<string, list<string>> $errors Erreurs par champ, ou _global.
+     * @param bool $validated Signale uniquement un aperçu valide, sans sauvegarde.
+     */
     private function form(
         ?Client $client,
         ?array $values = null,
@@ -213,6 +270,13 @@ final class ClientController extends BaseController
         );
     }
 
+/**
+ * Contrôle le CSRF puis valide les saisies, sans effectuer d’écriture.
+ *
+ * Un jeton refusé donne 403 ; des données invalides donnent 422 ;
+ * un aperçu valide donne 200. Le service retourne aussi data (normalisé),
+ * mais cette action ne l’utilise pas pour persister un client.
+ */
 public function preview(
     Request $request,
     ?string $id = null
@@ -262,6 +326,9 @@ public function preview(
     );
 }
 
+    /**
+     * Rend la vue correspondant au statut interne demandé (404, 500 ou 503).
+     */
     public function error(int $status): Response
     {
         return $this->render(

@@ -1,3 +1,7 @@
+{#
+   Messages à usage unique consommés par BaseController::render(). Leur texte est échappé ; le
+   type choisit présentation et annonce accessible.
+#}
 {% for flash in messagesFlash %}
     <div
         class="notice {{ flash.type == 'error' ? 'notice-error' : '' }}"

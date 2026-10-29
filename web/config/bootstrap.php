@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+// Chargement commun HTTP/CLI : aucun service ni accès réseau n’est créé ici.
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 // Récupération de la configuration locale.
+// APP_ENV provient du processus serveur, jamais d’un paramètre fourni par le navigateur.
 $environment = getenv('APP_ENV') ?: 'dev';
 
 if (!in_array($environment, ['dev', 'prod'], true)) {
@@ -18,6 +20,7 @@ if (!is_file($configPath)) {
 }
 
 // Chargement de la configuration locale.
+// Les sections sont conservées ; INI_SCANNER_TYPED distingue notamment false de "false".
 $config = parse_ini_file(
     $configPath,
     true,
@@ -39,6 +42,7 @@ if (
     throw new RuntimeException('Paramètres applicatifs invalides.');
 }
 
+// Échouer explicitement plutôt que publier des fixtures ou activer le debug en production.
 if (
     $environment === 'prod'
     && ($app['debug'] || $app['mode_demo'])
@@ -50,6 +54,7 @@ if (
 
 date_default_timezone_set($app['timezone']);
 
+// Liste fermée de scénarios : aucun nom de fichier ne vient d’une entrée utilisateur.
 $scenario = $config['demo']['scenario'] ?? 'normal';
 
 $allowedScenarios = [
@@ -68,6 +73,7 @@ if (!in_array($scenario, $allowedScenarios, true)) {
     );
 }
 
+// Db2 est optionnel : les champs de connexion ne sont exigés que si enabled=true.
 $databaseSection = $config['database'] ?? [];
 
 if (!is_array($databaseSection)) {
@@ -112,6 +118,8 @@ if ($databaseEnabled) {
         );
     }
 
+    // Le schéma sera utilisé comme identifiant SQL dans les contrôles de lecture.
+    // Cette liste de caractères autorisés interdit les fragments SQL arbitraires.
     if (
         !preg_match(
             '/^[A-Z][A-Z0-9_]{0,9}$/D',
@@ -132,6 +140,7 @@ if ($databaseEnabled) {
     ];
 }
 
+// Ne transmettre aux services que la configuration reconnue et validée.
 return [
     'environment' => $environment,
     'debug' => $app['debug'],

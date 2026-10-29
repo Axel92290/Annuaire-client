@@ -7,12 +7,25 @@ namespace App\Services;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
+/**
+ * Authentifie le compte web défini dans config/auth.local.php.
+ *
+ * Ce compte est distinct du profil IBM i utilisé par ODBC. Seuls le nom
+ * et une empreinte du hash sont stockés en session, jamais le mot de passe.
+ * Modifier le hash configuré rend les anciennes identités non valides.
+ */
 final class Authentication
 {
     private readonly string $username;
     private readonly string $passwordHash;
     private readonly string $fingerprint;
 
+    /**
+     * Valide le compte local et calcule l’empreinte servant à vérifier les sessions.
+     *
+     * @param array{username?: mixed, password_hash?: mixed} $account Compte privé.
+     * @throws RuntimeException Si le nom manque ou si le hash n’est pas reconnu.
+     */
     public function __construct(
         private readonly SessionInterface $session,
         array $account
@@ -36,6 +49,12 @@ final class Authentication
         $this->fingerprint = hash('sha256', $passwordHash);
     }
 
+    /**
+     * Retourne le nom seulement si l’identité en session correspond au compte actuel.
+     *
+     * Une identité absente, mal formée ou devenue obsolète équivaut à une
+     * session non authentifiée. hash_equals compare les valeurs attendues.
+     */
     public function username(): ?string
     {
         $identity = $this->session->get('security.identity');
@@ -61,11 +80,21 @@ final class Authentication
         return $identity['username'];
     }
 
+    /**
+     * Exprime le contrôle d’accès à partir de l’identité validée, pas de sa seule présence.
+     */
     public function isAuthenticated(): bool
     {
         return $this->username() !== null;
     }
 
+    /**
+     * Vérifie les deux identifiants puis renouvelle la session en cas de succès.
+     *
+     * Le mot de passe est vérifié même pour un nom erroné. Un échec retourne
+     * false ; un succès efface les anciennes données et détruit l’ancien ID
+     * pour limiter la fixation de session. L’identité est alors enregistrée.
+     */
     public function login(
         string $username,
         string $password
@@ -103,6 +132,9 @@ final class Authentication
         return true;
     }
 
+    /**
+     * Invalide la session courante, y compris son identité et ses jetons CSRF.
+     */
     public function logout(): void
     {
         $this->session->invalidate();

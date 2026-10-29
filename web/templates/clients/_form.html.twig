@@ -1,3 +1,10 @@
+{#
+   Formulaire partagé ajout/modification. ClientController::form() fournit les valeurs, erreurs,
+   actions et jeton. Aucune écriture réelle n’est active actuellement.
+#}
+{#
+   Résumé focalisé par app.js ; chaque erreur de champ renvoie au contrôle concerné.
+#}
 {% if erreurs %}
     <div
         id="resume-erreurs"
@@ -37,6 +44,9 @@
     method="post"
     action="{{ ecritureActive ? actionFormulaire : actionApercu }}"
     class="client-form"
+    {#
+       La validation serveur assure les mêmes messages et contrôles pour tous les clients.
+    #}
     novalidate
     data-client-form
 >
@@ -49,6 +59,10 @@
         </p>
     {% endif %}
 
+    {#
+       Métadonnées de rendu à maintenir en accord avec ClientInputValidator::FIELDS et le modèle
+       Db2. maxlength est une aide de saisie ; le serveur reste responsable des limites.
+    #}
     {% set fields = {
         nom: {
             label: 'Nom',
@@ -124,6 +138,9 @@
                     autocomplete="{{ field.autocomplete }}"
                     {% if name == 'nom' %}required{% endif %}
                     {% if erreurs[name] is defined %}
+                        {#
+                           Relier le champ à son message pour les technologies d’assistance.
+                        #}
                         aria-invalid="true"
                         aria-describedby="{{ name }}-error"
                     {% elseif name == 'email' %}

@@ -1,3 +1,7 @@
+{#
+   Layout commun. BaseController fournit modeDemo et messagesFlash ; services.php fournit
+   utilisateur, path() et csrf_token(). Les valeurs affichées restent échappées automatiquement.
+#}
 <!DOCTYPE html>
 <html lang="fr">
     <head>
@@ -15,9 +19,16 @@
         >
         <link rel="stylesheet" href="/assets/css/app.css">
 
+        {#
+           defer attend la construction du DOM ; le script est externe pour respecter la CSP.
+        #}
         <script src="/assets/js/app.js" defer></script>
     </head>
     <body>
+        {#
+           Lien d’évitement clavier vers le main ; sa cible accepte le focus grâce à
+           tabindex=-1.
+        #}
         <a class="skip-link" href="#contenu">
             Aller au contenu
         </a>
@@ -46,6 +57,10 @@
                     <div class="header-context">
                         <span>{{ utilisateur }}</span>
 
+                        {#
+                           Déconnexion volontaire par POST et jeton propre à cette action,
+                           jamais via un lien GET.
+                        #}
                         <form
                             method="post"
                             action="{{ path('auth_logout') }}"

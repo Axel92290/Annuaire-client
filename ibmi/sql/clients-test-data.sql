@@ -1,3 +1,8 @@
+-- Jeu de cinq clients fictifs, à exécuter une fois dans une table vide.
+-- Ce script n’est pas idempotent : le rejouer ajoute cinq lignes.
+-- Aucun ID fourni : Db2 le génère. Ne pas supposer que les ID valent 1 à 5.
+-- Les dates soustraient CURRENT_TIMEZONE pour enregistrer l’instant en UTC.
+-- Les accents, NULL, apostrophe doublée et zéros initiaux servent à la recette.
 SET SCHEMA AXEL921;
 
 INSERT INTO AXEL921.CLIENTS (
