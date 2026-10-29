@@ -4,6 +4,8 @@ Projet pédagogique d’annuaire clients en PHP MVC, avec des lectures dans Db2 
 
 **État du dépôt : interface de démonstration disponible.** Le socle PHP/Twig et les écrans Bootstrap fonctionnent avec des données fictives, sans Db2 ni RPG. Les formulaires vérifient les saisies sans enregistrer de client. Voir le [guide de démarrage et de validation](docs/interface-demo.md).
 
+Pour reprendre le code, suivre le [guide de développement commenté](docs/guide-developpement.md) : parcours des requêtes, rôle des classes et méthodes, sécurité, recherche asynchrone et limites actuelles.
+
 ## Ordre de réalisation
 
 La [nouvelle maquette UI/UX](docs/maquettes/README.md) sert de référence : titres Libre Caslon Display, texte Hanken Grotesk, palette neutre, filets et angles droits. Le PDF et les notes de parcours sont versionnés dans docs/maquettes/. On construit d’abord une interface Twig et Bootstrap fonctionnelle avec des données fictives, puis on branche les lectures Db2 et les écritures RPG sur les mêmes écrans.

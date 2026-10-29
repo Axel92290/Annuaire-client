@@ -1,5 +1,10 @@
+# Configuration Apache limitée à la racine publique du projet.
+# Nécessite mod_rewrite et AllowOverride autorisé dans le VirtualHost.
 RewriteEngine On
 
+# Laisser Apache servir les fichiers statiques et dossiers existants.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+# Tout autre chemin est résolu par le routeur PHP ; conserver les paramètres GET.
+# L arrête cette série de règles après la réécriture.
 RewriteRule ^ index.php [QSA,L]

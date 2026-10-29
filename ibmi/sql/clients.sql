@@ -8,9 +8,11 @@
 -- Les dates sont obligatoires et renseignées explicitement en UTC
 -- par les instructions d'insertion et les futurs programmes RPG.
 
+-- Fixer aussi le schéma courant pour les objets SQL associés à la table.
 SET SCHEMA AXEL921;
 
 CREATE TABLE AXEL921.CLIENTS (
+    -- Db2 attribue l’identité : ne pas la fournir dans INSERT ; des trous sont possibles.
     ID_CLIENT BIGINT
         GENERATED ALWAYS AS IDENTITY (
             START WITH 1
@@ -19,6 +21,7 @@ CREATE TABLE AXEL921.CLIENTS (
         )
         NOT NULL,
 
+    -- Jusqu’à quatre octets UTF-8 par caractère ; le CHECK impose 100 caractères métier.
     NOM VARCHAR(400) CCSID 1208 NOT NULL,
 
     PRENOM VARCHAR(400) CCSID 1208,
@@ -29,6 +32,7 @@ CREATE TABLE AXEL921.CLIENTS (
 
     ADRESSE VARCHAR(1020) CCSID 1208,
 
+    -- Nom SQL explicite et nom système court pour les outils IBM i ; valeur textuelle.
     CODE_POSTAL FOR COLUMN CODEPOSTAL
         VARCHAR(80) CCSID 1208,
 
@@ -50,6 +54,7 @@ CREATE TABLE AXEL921.CLIENTS (
                 BETWEEN 1 AND 100
         ),
 
+    -- Champs facultatifs : NULL autorisé, texte vide ou trop long refusé.
     CONSTRAINT CLT_PRE_CK
         CHECK (
             PRENOM IS NULL
@@ -92,6 +97,7 @@ CREATE TABLE AXEL921.CLIENTS (
                 BETWEEN 1 AND 100
         ),
 
+    -- Empêcher une modification antérieure à la création ; ne fixe pas le fuseau à lui seul.
     CONSTRAINT CLT_DAT_CK
         CHECK (MODIFIE_LE >= CREE_LE)
 );

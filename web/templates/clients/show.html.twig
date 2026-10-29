@@ -1,3 +1,7 @@
+{#
+   Contrat : client est un objet Client existant ; la recherche et la 404 restent dans le
+   contrôleur.
+#}
 {% extends 'base.html.twig' %}
 
 {% block title %}
@@ -61,6 +65,10 @@
                     <div>
                         <dt>Créé le</dt>
                         <dd>
+                            {#
+                               Date machine dans datetime ; date lisible explicitement convertie
+                               en Europe/Paris.
+                            #}
                             <time datetime="{{ client.creeLe|date('c') }}">
                                 {{ client.creeLe|date(
                                     'd/m/Y, H:i',

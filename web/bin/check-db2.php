@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+// Commande appelée par composer check:db2 depuis web/, jamais un endpoint HTTP.
+// Code de sortie 0 : connexion et SELECT réussis ; 1 : prérequis absent ou échec.
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -10,6 +12,7 @@ if (PHP_SAPI !== 'cli') {
 use App\Infrastructure\Db2Connection;
 
 try {
+    // Utiliser la même configuration validée que Wamp, sans charger les services web.
     $config = require dirname(__DIR__)
         . '/config/bootstrap.php';
 
@@ -35,6 +38,8 @@ try {
 
     $pdo = $db2->getConnection();
 
+    // Le schéma est validé par bootstrap avant son interpolation dans le SQL.
+    // COUNT(*) vérifie la lecture sans modifier les clients.
     $schema = $config['database']['schema'];
 
 
@@ -51,6 +56,7 @@ try {
     echo "Nombre de clients : {$count}\n";
 
     exit(0);
+// Journaliser seulement le type et le code, sans recopier un message contenant le DSN.
 } catch (Throwable $exception) {
     error_log(
         'Contrôle Db2 échoué ; type='

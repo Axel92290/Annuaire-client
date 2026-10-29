@@ -1,6 +1,6 @@
 <?php
 
-// php tests/smoke.php — aucune base, aucun serveur ni fichier INI requis.
+// Ancien test de démonstration : lire les réserves ci-dessous avant utilisation.
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -15,6 +15,13 @@ use Symfony\Component\Security\Csrf\TokenStorage\SessionTokenStorage;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 $checks = 0;
+/**
+ * Interrompt le script au premier contrôle refusé et compte les succès.
+ *
+ * Attention : ce script historique doit être adapté à l’authentification,
+ * au service client_input_validator et aux jetons create/update actuels.
+ * Il ne constitue pas en l’état une validation complète du socle actuel.
+ */
 function check(bool $condition, string $message): void
 {
     global $checks;
@@ -24,6 +31,8 @@ function check(bool $condition, string $message): void
     ++$checks;
 }
 
+// Construction directe des contrôleurs : ce script ne teste pas le filtrage HTTP
+// d’index.php. La fabrique exige désormais également auth.local.php.
 $request = Request::create('/clients');
 $config = ['debug' => true, 'mode_demo' => true];
 $services = (require dirname(__DIR__) . '/config/services.php')($config, $request);
@@ -32,10 +41,12 @@ $request->setSession($session);
 $stack = new RequestStack();
 $stack->push($request);
 $csrf = new CsrfTokenManager(null, new SessionTokenStorage($stack));
+// Fabrique de controleurs pour chaque scenario de test ; ne lance pas de requete HTTP.
 $controller = static fn (string $scenario = 'normal', bool $demo = true): ClientController => new ClientController(
     $services['twig'], $session, $demo, $csrf, $services['validator'], $scenario
 );
 
+// Liste et consultation : filtrage, ID de presentation, echappement et valeurs facultatives.
 $normal = $controller();
 $response = $normal->index(Request::create('/clients?q=Mar'));
 check($response->getStatusCode() === 200, 'La liste doit répondre 200.');
@@ -57,6 +68,8 @@ try {
     check(true, 'Client absent.');
 }
 
+// Apercus POST : verifier erreurs, conservation des saisies et absence de mutation des fixtures.
+// Les identifiants CSRF ci-dessous sont historiques et doivent etre adaptes avant execution.
 $before = hash_file('sha256', dirname(__DIR__) . '/fixtures/clients.php');
 $token = $csrf->getToken('client_preview')->getValue();
 $invalid = $normal->preview(Request::create('/clients/preview', 'POST', [
@@ -77,6 +90,7 @@ check($normal->preview(Request::create('/clients/preview', 'POST', ['_token' => 
 check($normal->preview(Request::create('/clients/128/preview', 'POST', ['_token' => $token, 'nom' => 'Autre nom']), '128')->getStatusCode() === 200, 'L’aperçu de modification doit fonctionner.');
 check(str_contains($normal->show('128')->getContent(), 'Martin'), 'La fiche doit rester inchangée après l’aperçu.');
 
+// Etats simules : liste vide, erreurs de saisie, confirmation fictive et ville longue.
 check(str_contains($controller('empty')->index($request)->getContent(), 'Votre annuaire est encore vide'), 'Scénario empty absent.');
 check(str_contains($controller('form-errors')->new()->getContent(), 'resume-erreurs'), 'Scénario form-errors absent.');
 check(str_contains($controller('confirmation')->index($request)->getContent(), 'Aperçu de confirmation'), 'La confirmation doit être explicitement fictive.');

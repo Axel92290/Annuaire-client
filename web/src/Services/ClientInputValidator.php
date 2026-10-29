@@ -7,8 +7,15 @@ namespace App\Services;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+/**
+ * Normalise et valide les champs clients reçus dans un POST.
+ *
+ * Sépare les valeurs à réafficher, les données normalisées et les erreurs.
+ * Ne sauvegarde rien et n'encode pas le HTML : Twig échappe à la sortie.
+ */
 final class ClientInputValidator
 {
+    // Limites métier en caractères, partagées avec le contrôleur et à aligner avec Db2.
     public const FIELDS = [
         'nom' => 100,
         'prenom' => 100,
@@ -19,11 +26,22 @@ final class ClientInputValidator
         'ville' => 100,
     ];
 
+    /**
+     * Reçoit le moteur Symfony chargé d’exécuter les contraintes par champ.
+     */
     public function __construct(
         private readonly ValidatorInterface $validator
     ) {
     }
 
+    /**
+     * Extrait uniquement les chaînes à réafficher dans le formulaire.
+     *
+     * Les tableaux ou autres types deviennent une chaîne vide pour le rendu ;
+     * validate() les refuse séparément. Aucun champ inconnu n’est réinjecté.
+     * @param array<string, mixed> $input Corps POST non fiable.
+     * @return array<string, string>
+     */
     public function values(array $input): array
     {
         $values = [];
@@ -39,6 +57,15 @@ final class ClientInputValidator
         return $values;
     }
 
+    /**
+     * Refuse les champs inconnus, normalise les textes et applique les limites.
+     *
+     * _token est autorisé comme métadonnée mais n’est pas une donnée métier ;
+     * le contrôleur doit vérifier sa validité avant d’appeler cette méthode.
+     * Les champs facultatifs vides deviennent null ; nom reste obligatoire.
+     * @param array<string, mixed> $input Données POST à contrôler.
+     * @return array{values: array<string, string>, data: array<string, string|null>, errors: array<string, list<string>>}
+     */
     public function validate(array $input): array
     {
         $values = $this->values($input);
@@ -50,6 +77,7 @@ final class ClientInputValidator
             '_token',
         ];
 
+        // Liste blanche : des champs ajoutés manuellement au POST sont refusés.
         $unknownFields = array_diff(
             array_keys($input),
             $allowedFields
@@ -71,6 +99,7 @@ final class ClientInputValidator
                 continue;
             }
 
+            // Normaliser sans encoder : les valeurs restent réutilisables hors du HTML.
             $normalized = trim($rawValue);
 
             $data[$field] = (

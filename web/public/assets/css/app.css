@@ -1,3 +1,4 @@
+/* Polices locales : pas de dépendance à un CDN. Les déclarations suivantes couvrent titres et texte courant. */
 @font-face {
     font-family: "Libre Caslon Display";
     src: url("../fonts/LibreCaslonDisplay-Regular.ttf") format("truetype");
@@ -14,6 +15,7 @@
     font-display: swap;
 }
 
+/* Variables de thème réutilisées dans les composants ; commencer ici pour adapter la palette et les polices. */
 :root {
     --ink: #111111;
     --secondary: #55554f;
@@ -54,12 +56,14 @@ a:hover {
     text-decoration-thickness: 2px;
 }
 
+/* Repère clavier commun : le focus doit rester visible sur chaque contrôle interactif. */
 :where(a, button, input, [tabindex]):focus-visible {
     outline: 2px solid var(--ink);
     outline-offset: 4px;
     box-shadow: none !important;
 }
 
+/* Cadre de page partagé : largeur de lecture, marges latérales et alignement des sections. */
 .page-container {
     width: calc(100% - 96px);
     max-width: 1184px;
@@ -171,6 +175,7 @@ h3 {
     margin-bottom: 56px;
 }
 
+/* Surcharge visuelle des boutons Bootstrap pour suivre la maquette ; conserver les états de focus. */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -220,6 +225,7 @@ h3 {
     padding-block: 12px;
 }
 
+/* Recherche : disposition des contrôles ; le comportement asynchrone est dans assets/js/app.js. */
 .search-form {
     display: flex;
     align-items: end;
@@ -265,6 +271,7 @@ h3 {
     margin-bottom: 8px;
 }
 
+/* Liste sur grand écran. Les contraintes de largeur et retours à la ligne contiennent les textes longs. */
 .client-table {
     width: 100%;
     table-layout: fixed;
@@ -324,6 +331,7 @@ h3 {
     background: var(--neutral);
 }
 
+/* Liste compacte sous le breakpoint lg ; le template gère la visibilité avec les utilitaires Bootstrap. */
 .mobile-clients {
     padding: 0;
     margin: 0;
@@ -370,6 +378,7 @@ h3 {
     text-transform: uppercase;
 }
 
+/* Fiche client : identité, coordonnées et dates, en colonnes sur les écrans larges. */
 .detail-layout {
     padding-top: 8px;
 }
@@ -430,6 +439,7 @@ h3 {
     margin: 0 0 32px;
 }
 
+/* Formulaires : espacement, aides et erreurs associées aux champs dans Twig. */
 .field-group {
     min-width: 0;
     margin-bottom: 40px;
@@ -466,6 +476,7 @@ h3 {
     margin-top: 8px;
 }
 
+/* Messages de statut, erreurs et résumés : leur rôle accessible est défini dans les templates. */
 .notice {
     border-top: 1px solid var(--ink);
     border-bottom: 1px solid var(--rule);
@@ -538,6 +549,7 @@ h3 {
     font-size: 12px;
 }
 
+/* Lien d’évitement masqué visuellement au repos et révélé au focus clavier. */
 .skip-link {
     position: fixed;
     left: 16px;
@@ -597,6 +609,7 @@ h3 {
     }
 }
 
+/* Adaptations aux petits écrans, sous le breakpoint sm de Bootstrap. */
 @media (max-width: 575.98px) {
     .page-container {
         width: calc(100% - 32px);
@@ -680,6 +693,7 @@ h3 {
     }
 }
 
+/* Respecter la préférence système de réduction des animations et transitions. */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
