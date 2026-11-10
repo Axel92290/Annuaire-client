@@ -155,6 +155,170 @@ final class ClientRepository
     }
 
     /**
+     * Recherche les clients dont le nom contient le texte demandé.
+     *
+     * Le filtre est transmis comme paramètre JSON ASCII, puis reconstruit
+     * en UTF-8 par Db2. Cette méthode reprend le transport validé
+     * dans le diagnostic des paramètres.
+     *
+     * La comparaison ignore la casse avec UPPER(), sans retirer les accents.
+     * Les caractères %, _ et ! de la saisie sont traités littéralement.
+     *
+     * @return list<Client>
+     *
+     * @throws InvalidArgumentException Si la recherche est invalide.
+     * @throws RuntimeException Si la lecture Db2 échoue.
+     */
+    public function findByName(string $search): array
+    {
+        /*
+     * Une recherche vide conserve le comportement de la liste complète.
+     * Le service normalise les espaces avant cet appel.
+     */
+        if ($search === '') {
+            return $this->findAll();
+        }
+
+        /*
+     * Protéger aussi l'entrée du repository si celui-ci est appelé
+     * directement, sans passer par le service.
+     */
+        if (
+            preg_match('//u', $search) !== 1
+            || mb_strlen($search, 'UTF-8') > 100
+        ) {
+            throw new InvalidArgumentException(
+                'Recherche invalide.'
+            );
+        }
+
+        /*
+     * Dans LIKE :
+     * - % représente normalement plusieurs caractères ;
+     * - _ représente normalement un caractère ;
+     * - ! sera notre caractère d'échappement.
+     *
+     * strtr() applique ces remplacements sans rééchapper
+     * les caractères qu'il vient d'ajouter.
+     */
+        $escapedSearch = strtr($search, [
+            '!' => '!!',
+            '%' => '!%',
+            '_' => '!_',
+        ]);
+
+        /*
+     * Seuls ces deux % ajoutés par l'application sont des jokers.
+     * Ils permettent une recherche par sous-chaîne.
+     */
+        $pattern = '%' . $escapedSearch . '%';
+
+        /*
+     * Sans JSON_UNESCAPED_UNICODE, les caractères non ASCII
+     * sont transmis sous forme d'échappements JSON.
+     *
+     * Le pilote ODBC reçoit donc uniquement du texte ASCII.
+     */
+        $payload = json_encode(
+            ['q' => $pattern],
+            JSON_THROW_ON_ERROR
+        );
+
+        try {
+            $pdo = $this->db2->getConnection();
+
+            /*
+         * La CTE reconstruit le motif en texte UTF-8.
+         *
+         * Sa capacité couvre les caractères échappés et les deux
+         * jokers ajoutés autour de la recherche.
+         *
+         * Les colonnes retournées utilisent toujours HEX()
+         * pour conserver la lecture UTF-8 validée précédemment.
+         */
+            $sql = '
+            WITH CLIENT_SEARCH_FILTER AS (
+                SELECT
+                    JSON_VALUE(
+                        CAST(? AS VARCHAR(4096) CCSID 1208),
+                        \'$.q\'
+                        RETURNING VARCHAR(808) CCSID 1208
+                        ERROR ON ERROR
+                    ) AS SEARCH_PATTERN
+                FROM SYSIBM.SYSDUMMY1
+            )
+            SELECT
+                C.ID_CLIENT,
+                HEX(C.NOM) AS NOM,
+                HEX(C.PRENOM) AS PRENOM,
+                HEX(C.EMAIL) AS EMAIL,
+                HEX(C.TELEPHONE) AS TELEPHONE,
+                HEX(C.ADRESSE) AS ADRESSE,
+                HEX(C.CODE_POSTAL) AS CODE_POSTAL,
+                HEX(C.VILLE) AS VILLE,
+                C.CREE_LE,
+                C.MODIFIE_LE
+            FROM ' . $this->schema . '.CLIENTS AS C
+            CROSS JOIN CLIENT_SEARCH_FILTER AS F
+            WHERE UPPER(C.NOM)
+                LIKE UPPER(F.SEARCH_PATTERN)
+                ESCAPE \'!\'
+            ORDER BY
+                C.NOM ASC,
+                C.PRENOM ASC,
+                C.ID_CLIENT ASC
+        ';
+
+            $statement = $pdo->prepare($sql);
+
+            if ($statement === false) {
+                throw new RuntimeException(
+                    'Recherche des clients indisponible.'
+                );
+            }
+
+            try {
+                /*
+             * Le document JSON reste séparé du texte SQL.
+             * Aucun fragment de saisie n'est concaténé dans la requête.
+             */
+                $statement->bindValue(
+                    1,
+                    $payload,
+                    PDO::PARAM_STR
+                );
+
+                $statement->execute();
+
+                $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+            } finally {
+                // Libérer le curseur, même si la récupération échoue.
+                $statement->closeCursor();
+            }
+
+            $clients = [];
+
+            foreach ($rows as $row) {
+                $clients[] = $this->hydrate($row);
+            }
+
+            return $clients;
+        } catch (PDOException $exception) {
+            /*
+         * Conserver une erreur générique.
+         * Ne pas afficher le message brut du pilote ou le paramètre.
+         */
+            error_log(
+                'Recherche des clients Db2 impossible.'
+            );
+
+            throw new RuntimeException(
+                'Recherche des clients indisponible.'
+            );
+        }
+    }
+
+    /**
      * Recherche un client à partir de son identifiant technique.
      *
      * L'identifiant reçu de l'URL reste une chaîne jusqu'à sa validation.

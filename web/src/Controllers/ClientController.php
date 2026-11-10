@@ -16,6 +16,7 @@ use App\Services\ClientInputValidator;
 use App\Services\ClientService;
 use RuntimeException;
 use LogicException;
+use InvalidArgumentException;
 
 /**
  * Pilote les écrans clients.
@@ -136,19 +137,16 @@ final class ClientController extends BaseController
     }
 
     /**
-     * Affiche la liste fictive ou réelle selon le mode configuré.
+     * Affiche la liste complète ou les résultats de recherche.
      *
-     * Le template reste identique dans les deux parcours.
-     * Une panne de lecture réelle produit une réponse 503.
+     * En mode réel, le filtrage est réalisé par Db2.
+     * En démonstration, les fixtures sont filtrées en PHP.
+     *
+     * Une recherche invalide produit une réponse 400.
+     * Une lecture indisponible produit une réponse 503.
      */
     public function index(Request $request): Response
     {
-        /*
-     * Les scénarios visuels concernent uniquement la démonstration.
-     *
-     * L'ancienne méthode interruption() bloque les parcours réels
-     * non raccordés. On ne l'appelle donc ici qu'en mode démonstration.
-     */
         if ($this->demoEnabled) {
             $response = $this->interruption();
 
@@ -157,30 +155,49 @@ final class ClientController extends BaseController
             }
         }
 
-        /*
-     * Accepter uniquement une recherche textuelle.
-     * Une URL comme ?q[]=Martin ne doit pas provoquer une erreur PHP.
-     */
-        $query = $request->query->all()['q'] ?? '';
-        $query = is_string($query)
-            ? trim($query)
-            : '';
-
         try {
             /*
-         * Le choix de la source est explicite.
-         *
-         * En mode réel, une erreur Db2 ne provoque jamais
-         * un retour silencieux aux fixtures.
+         * Valider avant tout accès Db2.
+         * Ne pas transformer silencieusement un tableau en texte.
          */
-            $clients = $this->demoEnabled
-                ? $this->clients()
-                : $this->clientService->findAll();
-        } catch (LogicException | RuntimeException $exception) {
+            $query = $this->clientService->normalizeSearch(
+                $request->query->all()['q'] ?? ''
+            );
+        } catch (InvalidArgumentException $exception) {
             /*
-         * Ne pas afficher ni journaliser ici le message technique brut.
-         * La page 503 existante présente une erreur générique.
+         * Ces messages proviennent de notre validateur de recherche.
+         * Le template conserve l'échappement HTML.
          */
+            return $this->render('errors/400.html.twig', [
+                'messageErreur' => $exception->getMessage(),
+            ], 400);
+        }
+
+        try {
+            if ($this->demoEnabled) {
+                /*
+             * Conserver la démonstration indépendante de Db2.
+             * mb_stripos recherche une sous-chaîne littérale.
+             */
+                $clients = array_values(array_filter(
+                    $this->clients(),
+                    static fn(Client $client): bool =>
+                    $query === ''
+                        || mb_stripos(
+                            $client->nom,
+                            $query,
+                            0,
+                            'UTF-8'
+                        ) !== false
+                ));
+            } else {
+                /*
+             * Le service choisit la liste complète ou la recherche SQL.
+             * Aucun filtrage PHP supplémentaire en mode réel.
+             */
+                $clients = $this->clientService->findAll($query);
+            }
+        } catch (LogicException | RuntimeException $exception) {
             error_log(
                 'Affichage de la liste des clients indisponible.'
             );
@@ -188,28 +205,9 @@ final class ClientController extends BaseController
             return $this->error(503);
         }
 
-        /*
-     * Étape transitoire pour l'issue 5 :
-     * conserver le comportement de recherche déjà disponible.
-     *
-     * Le filtrage est encore effectué en PHP après la lecture.
-     * L'issue 7 le remplacera par une recherche SQL paramétrée.
-     */
-        $clients = array_values(array_filter(
-            $clients,
-            static fn(Client $client): bool =>
-            $query === ''
-                || mb_stripos($client->nom, $query) !== false
-        ));
-
         return $this->render('clients/index.html.twig', [
             'clients' => $clients,
             'recherche' => $query,
-
-            /*
-         * Ne jamais afficher une confirmation fictive
-         * dans le parcours alimenté par Db2.
-         */
             'apercuConfirmation' =>
             $this->demoEnabled
                 && $this->scenario === 'confirmation',
