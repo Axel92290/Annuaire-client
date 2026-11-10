@@ -19,6 +19,7 @@ use App\Services\ClientInputValidator;
 use App\Infrastructure\Db2Connection;
 use App\Repositories\ClientRepository;
 use App\Services\ClientService;
+use App\Infrastructure\IbmiProgramGateway;
 
 /**
  * Fabrique les services partagés d’une requête HTTP.
@@ -38,6 +39,15 @@ return static function (
     // Le service est disponible même sans IBM i ; seul getConnection() ouvre le réseau.
     $db2 = new Db2Connection(
         $config['database'] ?? ['enabled' => false]
+    );
+
+    /*
+ * Préparer la passerelle sans ouvrir de connexion.
+ * Aucun programme IBM i n'est appelé pendant sa construction.
+ */
+    $ibmiProgramGateway = new IbmiProgramGateway(
+        $db2,
+        $config['database']['schema'] ?? 'AXEL921'
     );
 
     /*
@@ -175,6 +185,7 @@ return static function (
         'db2' => $db2,
         'client_repository' => $clientRepository,
         'client_service' => $clientService,
+        'ibmi_program_gateway' => $ibmiProgramGateway,
 
     ];
 };
