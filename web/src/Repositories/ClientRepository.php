@@ -155,6 +155,147 @@ final class ClientRepository
     }
 
     /**
+     * Recherche un client à partir de son identifiant technique.
+     *
+     * L'identifiant reçu de l'URL reste une chaîne jusqu'à sa validation.
+     * Une valeur invalide ou hors plage retourne null sans interroger Db2.
+     *
+     * La requête utilise un paramètre : aucune valeur de l'URL n'est
+     * concaténée dans le texte SQL.
+     *
+     * @param string $id Identifiant décimal positif, sans zéro initial.
+     *
+     * @return Client|null Client trouvé, ou null si l'identifiant est
+     *                     invalide ou si aucune ligne ne correspond.
+     *
+     * @throws RuntimeException Si la lecture Db2 échoue.
+     */
+    public function findById(string $id): ?Client
+    {
+        /*
+     * Vérifier la forme avant toute conversion.
+     *
+     * Refuser notamment :
+     * - les nombres négatifs ;
+     * - zéro ;
+     * - les espaces ;
+     * - les décimaux ;
+     * - les notations scientifiques ;
+     * - les identifiants avec un zéro initial.
+     */
+        if (preg_match('/^[1-9][0-9]{0,18}$/D', $id) !== 1) {
+            return null;
+        }
+
+        /*
+     * Vérifier aussi la plage représentable par PHP.
+     *
+     * Le projet utilise un PHP 64 bits, compatible avec
+     * la plage positive du BIGINT signé de Db2.
+     *
+     * Aucun passage par un flottant n'est effectué.
+     */
+        $validatedId = filter_var(
+            $id,
+            FILTER_VALIDATE_INT,
+            [
+                'options' => [
+                    'min_range' => 1,
+                ],
+            ]
+        );
+
+        if ($validatedId === false) {
+            return null;
+        }
+
+        try {
+            $pdo = $this->db2->getConnection();
+
+            /*
+         * Reprendre le transport hexadécimal validé dans l'issue 5
+         * pour préserver les octets UTF-8 avec ODBC sous Windows.
+         *
+         * hydrate() décode ces colonnes avec textFromDatabase().
+         *
+         * Le schéma est validé par le constructeur.
+         * L'identifiant reste un paramètre SQL.
+         */
+            $sql = '
+            SELECT
+                C.ID_CLIENT,
+                HEX(C.NOM) AS NOM,
+                HEX(C.PRENOM) AS PRENOM,
+                HEX(C.EMAIL) AS EMAIL,
+                HEX(C.TELEPHONE) AS TELEPHONE,
+                HEX(C.ADRESSE) AS ADRESSE,
+                HEX(C.CODE_POSTAL) AS CODE_POSTAL,
+                HEX(C.VILLE) AS VILLE,
+                C.CREE_LE,
+                C.MODIFIE_LE
+            FROM ' . $this->schema . '.CLIENTS AS C
+            WHERE C.ID_CLIENT = CAST(? AS BIGINT)
+        ';
+
+            $statement = $pdo->prepare($sql);
+
+            if ($statement === false) {
+                throw new RuntimeException(
+                    'Lecture de la fiche client indisponible.'
+                );
+            }
+
+            try {
+                /*
+             * Transmettre l'identifiant décimal comme une chaîne.
+             *
+             * Le CAST explicite demande à Db2 de le traiter comme
+             * un BIGINT et évite de dépendre d'une liaison entière
+             * ODBC potentiellement limitée à une autre largeur.
+             */
+                $statement->bindValue(
+                    1,
+                    (string) $validatedId,
+                    PDO::PARAM_STR
+                );
+
+                $statement->execute();
+
+                /*
+             * La clé primaire garantit au maximum une ligne.
+             * fetch() retourne false si aucun client ne correspond.
+             */
+                $row = $statement->fetch(PDO::FETCH_ASSOC);
+            } finally {
+                // Libérer le curseur, y compris après une erreur.
+                $statement->closeCursor();
+            }
+
+            if ($row === false) {
+                return null;
+            }
+
+            /*
+         * Réutiliser la conversion déjà validée pour la liste :
+         * identifiant, textes UTF-8, valeurs NULL et dates UTC.
+         */
+            return $this->hydrate($row);
+        } catch (PDOException $exception) {
+            /*
+         * Ne pas exposer le message brut du pilote, la requête
+         * ou les paramètres privés dans la réponse HTTP.
+         */
+            error_log(
+                'Lecture de la fiche client Db2 impossible.'
+            );
+
+            throw new RuntimeException(
+                'Lecture de la fiche client indisponible.'
+            );
+        }
+    }
+
+    /**
      * Transforme une ligne SQL en objet Client.
      *
      * Les noms SQL sont adaptés aux propriétés du modèle :
