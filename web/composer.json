@@ -25,7 +25,8 @@
     "ext-pdo_odbc": "Requise pour les lectures Db2 réelles ; facultative pour la démonstration."
     },
     "scripts": {
-    "check:db2": "@php bin/check-db2.php"
+    "check:db2": "@php bin/check-db2.php",
+    "check:gateway": "@php bin/check-gateway.php"
     }  
 }
 
