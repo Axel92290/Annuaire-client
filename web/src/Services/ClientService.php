@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Repositories\ClientRepository;
+use InvalidArgumentException;
 
 /**
  * Fournit les opérations de lecture des clients au contrôleur.
@@ -15,6 +16,7 @@ use App\Repositories\ClientRepository;
  */
 final class ClientService
 {
+    public const MAX_SEARCH_LENGTH = 100;
     /**
      * Reçoit le repository par injection.
      *
@@ -25,16 +27,22 @@ final class ClientService
     ) {}
 
     /**
-     * Retourne la liste réelle des clients.
+     * Fournit la liste complète ou les résultats d'une recherche.
      *
-     * Aucune donnée fictive n'est substituée en cas de panne :
-     * l'erreur remonte jusqu'au contrôleur.
+     * La validation est appliquée ici aussi pour les appels au service
+     * qui ne proviendraient pas du contrôleur HTTP.
      *
      * @return list<Client>
      */
-    public function findAll(): array
+    public function findAll(string $search = ''): array
     {
-        return $this->clients->findAll();
+        $search = $this->normalizeSearch($search);
+
+        if ($search === '') {
+            return $this->clients->findAll();
+        }
+
+        return $this->clients->findByName($search);
     }
 
     /**
@@ -49,5 +57,43 @@ final class ClientService
     public function findById(string $id): ?Client
     {
         return $this->clients->findById($id);
+    }
+
+    /**
+     * Vérifie et normalise le paramètre de recherche.
+     *
+     * Une entrée HTTP n'est pas nécessairement une chaîne :
+     * q[]=Mar produit par exemple un tableau.
+     *
+     * @throws InvalidArgumentException Si le type, l'encodage
+     *                                  ou la longueur est invalide.
+     */
+    public function normalizeSearch(mixed $input): string
+    {
+        if (!is_string($input)) {
+            throw new InvalidArgumentException(
+                'La recherche doit être un texte.'
+            );
+        }
+
+        if (preg_match('//u', $input) !== 1) {
+            throw new InvalidArgumentException(
+                'La recherche contient un texte invalide.'
+            );
+        }
+
+        // Retirer les espaces aux extrémités, sans modifier les espaces internes.
+        $search = trim($input);
+
+        if (
+            mb_strlen($search, 'UTF-8')
+            > self::MAX_SEARCH_LENGTH
+        ) {
+            throw new InvalidArgumentException(
+                'La recherche est limitée à 100 caractères.'
+            );
+        }
+
+        return $search;
     }
 }

@@ -1,0 +1,35 @@
+{#
+   Recherche refusée avant l'accès à Db2.
+   Le contrôleur fournit messageErreur et fixe le statut HTTP 400.
+   La saisie brute n'est pas réaffichée sur cette page.
+#}
+{% extends 'base.html.twig' %}
+
+{% block title %}Recherche invalide — Annuaire{% endblock %}
+
+{% block content %}
+    <section class="error-page">
+        <p class="eyebrow">400 · Annuaire</p>
+
+        <h1>Vérifiez votre recherche</h1>
+
+        {#
+           Le focus permet d'annoncer le message après la navigation.
+           app.js utilise déjà l'attribut data-focus-errors.
+        #}
+        <p
+            role="alert"
+            tabindex="-1"
+            data-focus-errors
+        >
+            {{ messageErreur }}
+        </p>
+
+        <a
+            class="btn btn-outline-primary"
+            href="{{ path('clients_index') }}"
+        >
+            Retour aux clients
+        </a>
+    </section>
+{% endblock %}
