@@ -9,6 +9,7 @@ use PDO;
 use PDOException;
 use RuntimeException;
 
+
 /**
  * Fournit une connexion PDO_ODBC à la demande, réutilisée dans cette instance.
  *
@@ -73,6 +74,9 @@ final class Db2Connection
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ]
             );
+
+ 
+            
         } catch (PDOException $exception) {
             // Ne conserver qu’un code borné : le message IBM peut révéler le DSN.
             $sqlState = (string) (
