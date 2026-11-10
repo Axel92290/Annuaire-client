@@ -48,7 +48,9 @@ try {
         $config['mode_demo'],
         $services['csrf'],
         $services['client_input_validator'],
-        $config['demo_scenario']
+        $services['client_service'],
+        $config['demo_scenario'],
+    
     );
 
     $authController = new AuthController(

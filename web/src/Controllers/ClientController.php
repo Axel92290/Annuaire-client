@@ -13,6 +13,8 @@ use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use App\Services\ClientInputValidator;
+use App\Services\ClientService;
+use RuntimeException;
 
 /**
  * Pilote les écrans clients de démonstration à partir des fixtures PHP.
@@ -39,6 +41,7 @@ final class ClientController extends BaseController
         private readonly bool $demoEnabled,
         private readonly CsrfTokenManagerInterface $csrf,
         private readonly ClientInputValidator $inputValidator,
+        private readonly ClientService $clientService,
         private readonly string $scenario = 'normal',
 
     ) {
@@ -130,24 +133,67 @@ final class ClientController extends BaseController
     }
 
     /**
-     * Filtre les fixtures par fragment de nom, sans tenir compte de la casse.
+     * Affiche la liste fictive ou réelle selon le mode configuré.
      *
-     * Le paramètre GET q doit être une chaîne ; un tableau est traité comme
-     * une recherche vide. La même page HTML sert au GET classique et à fetch.
+     * Le template reste identique dans les deux parcours.
+     * Une panne de lecture réelle produit une réponse 503.
      */
     public function index(Request $request): Response
     {
-        if ($response = $this->interruption()) {
-            return $response;
+    /*
+     * Les scénarios visuels concernent uniquement la démonstration.
+     *
+     * L'ancienne méthode interruption() bloque les parcours réels
+     * non raccordés. On ne l'appelle donc ici qu'en mode démonstration.
+     */
+        if ($this->demoEnabled) {
+            $response = $this->interruption();
+
+            if ($response !== null) {
+                return $response;
+            }
         }
 
+     /*
+     * Accepter uniquement une recherche textuelle.
+     * Une URL comme ?q[]=Martin ne doit pas provoquer une erreur PHP.
+     */
         $query = $request->query->all()['q'] ?? '';
-        $query = is_string($query) ? trim($query) : '';
+        $query = is_string($query)
+            ? trim($query)
+            : '';
 
-        // Le predicat conserve tous les clients si q est vide ; sinon il cherche
-        // une sous-chaine du nom. array_values retablit une liste indexee apres filtrage.
+        try {
+            /*
+         * Le choix de la source est explicite.
+         *
+         * En mode réel, une erreur Db2 ne provoque jamais
+         * un retour silencieux aux fixtures.
+         */
+            $clients = $this->demoEnabled
+                ? $this->clients()
+                : $this->clientService->findAll();
+        } catch (RuntimeException $exception) {
+            /*
+         * Ne pas afficher ni journaliser ici le message technique brut.
+         * La page 503 existante présente une erreur générique.
+         */
+            error_log(
+                'Affichage de la liste des clients indisponible.'
+            );
+
+            return $this->error(503);
+        }
+
+        /*
+     * Étape transitoire pour l'issue 5 :
+     * conserver le comportement de recherche déjà disponible.
+     *
+     * Le filtrage est encore effectué en PHP après la lecture.
+     * L'issue 7 le remplacera par une recherche SQL paramétrée.
+     */
         $clients = array_values(array_filter(
-            $this->clients(),
+            $clients,
             static fn(Client $client): bool =>
             $query === ''
                 || mb_stripos($client->nom, $query) !== false
@@ -156,8 +202,14 @@ final class ClientController extends BaseController
         return $this->render('clients/index.html.twig', [
             'clients' => $clients,
             'recherche' => $query,
+
+            /*
+         * Ne jamais afficher une confirmation fictive
+         * dans le parcours alimenté par Db2.
+         */
             'apercuConfirmation' =>
-            $this->scenario === 'confirmation',
+            $this->demoEnabled
+                && $this->scenario === 'confirmation',
         ]);
     }
 
@@ -270,61 +322,61 @@ final class ClientController extends BaseController
         );
     }
 
-/**
- * Contrôle le CSRF puis valide les saisies, sans effectuer d’écriture.
- *
- * Un jeton refusé donne 403 ; des données invalides donnent 422 ;
- * un aperçu valide donne 200. Le service retourne aussi data (normalisé),
- * mais cette action ne l’utilise pas pour persister un client.
- */
-public function preview(
-    Request $request,
-    ?string $id = null
-): Response {
-    if ($response = $this->interruption()) {
-        return $response;
-    }
+    /**
+     * Contrôle le CSRF puis valide les saisies, sans effectuer d’écriture.
+     *
+     * Un jeton refusé donne 403 ; des données invalides donnent 422 ;
+     * un aperçu valide donne 200. Le service retourne aussi data (normalisé),
+     * mais cette action ne l’utilise pas pour persister un client.
+     */
+    public function preview(
+        Request $request,
+        ?string $id = null
+    ): Response {
+        if ($response = $this->interruption()) {
+            return $response;
+        }
 
-    $client = $id === null
-        ? null
-        : $this->find($id);
+        $client = $id === null
+            ? null
+            : $this->find($id);
 
-    $input = $request->request->all();
-    $token = $input['_token'] ?? '';
+        $input = $request->request->all();
+        $token = $input['_token'] ?? '';
 
-    $tokenId = $client === null
-        ? 'client_create'
-        : 'client_update_' . $client->id;
+        $tokenId = $client === null
+            ? 'client_create'
+            : 'client_update_' . $client->id;
 
-    if (
-        !is_string($token)
-        || !$this->csrf->isTokenValid(
-            new CsrfToken($tokenId, $token)
-        )
-    ) {
+        if (
+            !is_string($token)
+            || !$this->csrf->isTokenValid(
+                new CsrfToken($tokenId, $token)
+            )
+        ) {
+            return $this->form(
+                $client,
+                $this->inputValidator->values($input),
+                [
+                    '_global' => [
+                        'La page a expiré. Vérifiez vos informations'
+                            . ' puis réessayez.',
+                    ],
+                ],
+                403
+            );
+        }
+
+        $result = $this->inputValidator->validate($input);
+
         return $this->form(
             $client,
-            $this->inputValidator->values($input),
-            [
-                '_global' => [
-                    'La page a expiré. Vérifiez vos informations'
-                    . ' puis réessayez.',
-                ],
-            ],
-            403
+            $result['values'],
+            $result['errors'],
+            $result['errors'] === [] ? 200 : 422,
+            $result['errors'] === []
         );
     }
-
-    $result = $this->inputValidator->validate($input);
-
-    return $this->form(
-        $client,
-        $result['values'],
-        $result['errors'],
-        $result['errors'] === [] ? 200 : 422,
-        $result['errors'] === []
-    );
-}
 
     /**
      * Rend la vue correspondant au statut interne demandé (404, 500 ou 503).

@@ -17,6 +17,8 @@ use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
 use App\Services\ClientInputValidator;
 use App\Infrastructure\Db2Connection;
+use App\Repositories\ClientRepository;
+use App\Services\ClientService;
 
 /**
  * Fabrique les services partagés d’une requête HTTP.
@@ -30,12 +32,32 @@ use App\Infrastructure\Db2Connection;
 return static function (
     array $config,
     Request $request
-    
+
 ): array {
 
     // Le service est disponible même sans IBM i ; seul getConnection() ouvre le réseau.
     $db2 = new Db2Connection(
         $config['database'] ?? ['enabled' => false]
+    );
+
+    /*
+ * Préparer le repository sans ouvrir de connexion.
+ *
+ * En démonstration, la section database peut être désactivée :
+ * le nom par défaut sert uniquement à construire l'objet.
+ * La liste fictive n'appellera pas ce repository.
+ */
+    $clientRepository = new ClientRepository(
+        $db2,
+        $config['database']['schema'] ?? 'AXEL921'
+    );
+
+    /*
+ * Injecter le repository dans le service.
+ * Le contrôleur recevra ce service plutôt qu'une connexion PDO.
+ */
+    $clientService = new ClientService(
+        $clientRepository
     );
     // 1. Créer la session avant les services qui l'utilisent.
     $session = new Session(new NativeSessionStorage([
@@ -112,25 +134,25 @@ return static function (
         $authentication->username()
     );
 
-// Fonctions Twig enregistrées une seule fois : URL nommées et jetons liés à la session.
-// path(nom, parametres) retourne une URL generee depuis la collection de routes.
-$twig->addFunction(new TwigFunction(
-    'path',
-    static fn (
-        string $name,
-        array $parameters = []
-    ): string => $urlGenerator->generate(
-        $name,
-        $parameters
-    )
-));
+    // Fonctions Twig enregistrées une seule fois : URL nommées et jetons liés à la session.
+    // path(nom, parametres) retourne une URL generee depuis la collection de routes.
+    $twig->addFunction(new TwigFunction(
+        'path',
+        static fn(
+            string $name,
+            array $parameters = []
+        ): string => $urlGenerator->generate(
+            $name,
+            $parameters
+        )
+    ));
 
-// csrf_token(id) retourne le jeton de la session courante pour une action precise.
-$twig->addFunction(new TwigFunction(
-    'csrf_token',
-    static fn (string $id): string =>
+    // csrf_token(id) retourne le jeton de la session courante pour une action precise.
+    $twig->addFunction(new TwigFunction(
+        'csrf_token',
+        static fn(string $id): string =>
         $csrf->getToken($id)->getValue()
-));
+    ));
 
 
     // Le moteur Symfony exécute les contraintes définies dans le validateur métier.
@@ -151,6 +173,8 @@ $twig->addFunction(new TwigFunction(
         'validator' => $validator,
         'client_input_validator' => $clientInputValidator,
         'db2' => $db2,
-        
+        'client_repository' => $clientRepository,
+        'client_service' => $clientService,
+
     ];
 };
