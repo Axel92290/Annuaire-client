@@ -22,8 +22,7 @@ final class ClientService
      */
     public function __construct(
         private readonly ClientRepository $clients
-    ) {
-    }
+    ) {}
 
     /**
      * Retourne la liste réelle des clients.
@@ -36,5 +35,19 @@ final class ClientService
     public function findAll(): array
     {
         return $this->clients->findAll();
+    }
+
+    /**
+     * Retourne un client réel à partir de son identifiant.
+     *
+     * Le repository contrôle l'identifiant et réalise la lecture.
+     * null indique une valeur invalide ou un client absent.
+     *
+     * Le service ne choisit pas de statut HTTP :
+     * cette responsabilité appartient au contrôleur.
+     */
+    public function findById(string $id): ?Client
+    {
+        return $this->clients->findById($id);
     }
 }

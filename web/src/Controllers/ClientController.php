@@ -15,12 +15,15 @@ use Twig\Environment;
 use App\Services\ClientInputValidator;
 use App\Services\ClientService;
 use RuntimeException;
+use LogicException;
 
 /**
- * Pilote les écrans clients de démonstration à partir des fixtures PHP.
+ * Pilote les écrans clients.
  *
- * Aucune méthode de ce contrôleur ne lit Db2 ou n'enregistre de client.
- * Les scénarios permettent de vérifier les états des écrans sans IBM i.
+ * La liste et la fiche utilisent ClientService en mode réel,
+ * ou les fixtures en mode démonstration.
+ *
+ * Les formulaires réels et les écritures restent désactivés.
  */
 final class ClientController extends BaseController
 {
@@ -140,7 +143,7 @@ final class ClientController extends BaseController
      */
     public function index(Request $request): Response
     {
-    /*
+        /*
      * Les scénarios visuels concernent uniquement la démonstration.
      *
      * L'ancienne méthode interruption() bloque les parcours réels
@@ -154,7 +157,7 @@ final class ClientController extends BaseController
             }
         }
 
-     /*
+        /*
      * Accepter uniquement une recherche textuelle.
      * Une URL comme ?q[]=Martin ne doit pas provoquer une erreur PHP.
      */
@@ -173,7 +176,7 @@ final class ClientController extends BaseController
             $clients = $this->demoEnabled
                 ? $this->clients()
                 : $this->clientService->findAll();
-        } catch (RuntimeException $exception) {
+        } catch (LogicException | RuntimeException $exception) {
             /*
          * Ne pas afficher ni journaliser ici le message technique brut.
          * La page 503 existante présente une erreur générique.
@@ -223,16 +226,71 @@ final class ClientController extends BaseController
     }
 
     /**
-     * Affiche la fiche trouvée ou laisse remonter son absence en 404.
+     * Affiche une fiche fictive ou réelle selon le mode configuré.
+     *
+     * En démonstration, les scénarios et les fixtures sont conservés.
+     * En mode réel, la lecture passe par ClientService.
+     *
+     * Un client absent provoque une 404.
+     * Une lecture réelle indisponible produit une réponse 503.
      */
     public function show(string $id): Response
     {
-        if ($response = $this->interruption()) {
-            return $response;
+        if ($this->demoEnabled) {
+            /*
+         * Conserver les scénarios de démonstration :
+         * indisponibilité simulée, erreur simulée, etc.
+         */
+            $response = $this->interruption();
+
+            if ($response !== null) {
+                return $response;
+            }
+
+            /*
+         * find() reste la recherche dans les fixtures.
+         * Cette méthode lance déjà ResourceNotFoundException
+         * si le client fictif n'existe pas.
+         */
+            $client = $this->find($id);
+        } else {
+            try {
+                /*
+             * Lire uniquement le client demandé dans Db2.
+             * Aucun remplacement par une fixture en cas d'échec.
+             */
+                $client = $this->clientService->findById($id);
+            } catch (LogicException | RuntimeException $exception) {
+                /*
+             * Couvrir une intégration désactivée, une panne
+             * de connexion ou une erreur de lecture/conversion.
+             *
+             * Le navigateur reçoit uniquement la page générique.
+             */
+                error_log(
+                    'Affichage de la fiche client indisponible.'
+                );
+
+                return $this->error(503);
+            }
+
+            if ($client === null) {
+                /*
+             * Le point d'entrée intercepte cette exception
+             * et retourne la page 404 existante.
+             */
+                throw new ResourceNotFoundException(
+                    'Client absent.'
+                );
+            }
         }
 
+        /*
+     * Conserver le contrat du template :
+     * la variable client contient toujours un objet Client.
+     */
         return $this->render('clients/show.html.twig', [
-            'client' => $this->find($id),
+            'client' => $client,
         ]);
     }
 
